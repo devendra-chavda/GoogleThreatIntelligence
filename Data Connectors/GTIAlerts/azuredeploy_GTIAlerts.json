@@ -492,7 +492,7 @@
                         "SCOPE": "[variables('scope')]",
                         "AZURE_DATA_COLLECTION_ENDPOINT": "[reference(resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('endpointName')), '2022-06-01').logsIngestion.endpoint]",
                         "AZURE_DATA_COLLECTION_RULE_ID": "[reference(resourceId('Microsoft.Insights/dataCollectionRules', variables('mainRuleName')), '2022-06-01').immutableId]",
-                        "WEBSITE_RUN_FROM_PACKAGE": "https://aka.ms/sentinel-GoogleThreatIntelligenceAlerts-functionapp"
+                        "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/devendra-chavda/GoogleThreatIntelligence/raw/refs/heads/main/Data%20Connectors/GTIAlerts/GTIAlerts.zip"
                     }
                 }
             ]
