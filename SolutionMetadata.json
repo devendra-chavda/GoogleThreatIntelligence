@@ -1,0 +1,15 @@
+{
+    "publisherId": "google",
+    "offerId": "google-threat-intelligence-sentinel",
+    "firstPublishDate": "2026-05-21",
+    "lastPublishDate": "2026-05-21",
+    "providers": [
+        "Google"
+    ],
+    "categories": {
+        "domains": [
+            "Security - Threat Intelligence"
+        ],
+        "verticals": []
+    }
+}

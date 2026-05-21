@@ -1,0 +1,163 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "metadata": {
+        "author": "Google",
+        "comments": "Solution template for Google Threat Intelligence"
+    },
+    "parameters": {
+        "location": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Not used, but needed to pass ARM template validation. Use the 'location' parameter of the deployment for the resource location."
+            }
+        },
+        "workspace-location": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "[concat('Region to deploy solution resources -- separate from location selection', parameters('location'))]"
+            }
+        },
+        "workspace": {
+            "defaultValue": "",
+            "type": "string",
+            "metadata": {
+                "description": "Workspace name for Log Analytics where Microsoft Sentinel is setup"
+            }
+        }
+    },
+    "variables": {
+        "solutionId": "google.google-threat-intelligence-sentinel",
+        "_solutionId": "[variables('solutionId')]",
+        "workspaceResourceId": "[resourceId('microsoft.OperationalInsights/Workspaces', parameters('workspace'))]",
+        "uiConfigId1": "GoogleThreatIntelligenceAlertsAPI",
+        "_uiConfigId1": "[variables('uiConfigId1')]",
+        "dataConnectorContentId1": "GoogleThreatIntelligenceAlertsAPI",
+        "_dataConnectorContentId1": "[variables('dataConnectorContentId1')]",
+        "dataConnectorId1": "[extensionResourceId(resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspace')), 'Microsoft.SecurityInsights/dataConnectors', variables('_dataConnectorContentId1'))]",
+        "_dataConnectorId1": "[variables('dataConnectorId1')]",
+        "dataConnectorTemplateSpecName1": "[concat(parameters('workspace'), '-dc-', uniquestring(variables('_dataConnectorContentId1')))]",
+        "dataConnectorVersion1": "1.0.0"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/providers/contentTemplates",
+            "apiVersion": "2023-04-01-preview",
+            "name": "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/', variables('dataConnectorTemplateSpecName1'))]",
+            "location": "[parameters('workspace-location')]",
+            "dependsOn": [],
+            "properties": {
+                "description": "Google Threat Intelligence Alerts data connector with template version 1.0.0",
+                "mainTemplate": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "[variables('dataConnectorVersion1')]",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "name": "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/', variables('_dataConnectorContentId1'))]",
+                            "apiVersion": "2021-03-01-preview",
+                            "type": "Microsoft.OperationalInsights/workspaces/providers/dataConnectors",
+                            "location": "[parameters('workspace-location')]",
+                            "kind": "GenericUI",
+                            "properties": {
+                                "connectorUiConfig": {
+                                    "id": "[variables('_uiConfigId1')]",
+                                    "title": "Google Threat Intelligence Alerts",
+                                    "publisher": "Google",
+                                    "descriptionMarkdown": "The [Google Threat Intelligence (GTI)](https://cloud.google.com/threat-intelligence) data connector ingests GTI alerts into Microsoft Sentinel. The connector polls the GTI Alerts API on a configurable schedule and stores alert data in the GTIAlerts_CL custom table.",
+                                    "graphQueries": [
+                                        {
+                                            "metricName": "Total GTI alerts received",
+                                            "legend": "GTIAlerts_CL",
+                                            "baseQuery": "GTIAlerts_CL"
+                                        }
+                                    ],
+                                    "sampleQueries": [
+                                        {
+                                            "description": "All GTI Alerts (latest first)",
+                                            "query": "GTIAlerts_CL\n| sort by TimeGenerated desc"
+                                        },
+                                        {
+                                            "description": "High and critical priority GTI Alerts",
+                                            "query": "GTIAlerts_CL\n| where priorityAnalysis_priorityLevel in ('PRIORITY_LEVEL_HIGH', 'PRIORITY_LEVEL_CRITICAL')\n| sort by TimeGenerated desc"
+                                        }
+                                    ],
+                                    "dataTypes": [
+                                        {
+                                            "name": "GTIAlerts_CL",
+                                            "lastDataReceivedQuery": "GTIAlerts_CL\n            | summarize Time = max(TimeGenerated)\n            | where isnotempty(Time)"
+                                        }
+                                    ],
+                                    "connectivityCriterias": [
+                                        {
+                                            "type": "IsConnectedQuery",
+                                            "value": [
+                                                "GTIAlerts_CL\n            | summarize LastLogReceived = max(TimeGenerated)\n            | project IsConnected = LastLogReceived > ago(30d)"
+                                            ]
+                                        }
+                                    ],
+                                    "availability": {
+                                        "status": 1,
+                                        "isPreview": true
+                                    },
+                                    "permissions": {
+                                        "resourceProvider": [
+                                            {
+                                                "provider": "Microsoft.OperationalInsights/workspaces",
+                                                "permissionsDisplayText": "read and write permissions on the workspace are required.",
+                                                "providerDisplayName": "Workspace",
+                                                "scope": "Workspace",
+                                                "requiredPermissions": {
+                                                    "write": true,
+                                                    "read": true,
+                                                    "delete": true
+                                                }
+                                            }
+                                        ],
+                                        "customs": [
+                                            {
+                                                "name": "Google Threat Intelligence API Key",
+                                                "description": "A Google Threat Intelligence API key and project ID are required."
+                                            }
+                                        ]
+                                    },
+                                    "instructionSteps": [
+                                        {
+                                            "description": "Deploy the Google Threat Intelligence Alerts Function App by clicking the link below.",
+                                            "instructions": [
+                                                {
+                                                    "parameters": {
+                                                        "linkType": "OpenDeploymentDialog",
+                                                        "linkedTemplate": "https://aka.ms/sentinel-GoogleThreatIntelligenceAlerts-azuredeploy"
+                                                    },
+                                                    "type": "InstallAgent"
+                                                }
+                                            ],
+                                            "title": "Deploy Azure Function App"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                "packageKind": "Solution",
+                "packageVersion": "[variables('dataConnectorVersion1')]",
+                "packageName": "Google Threat Intelligence",
+                "packageId": "[variables('_solutionId')]",
+                "contentSchemaVersion": "3.0.0",
+                "contentId": "[variables('_dataConnectorContentId1')]",
+                "contentKind": "DataConnector",
+                "displayName": "Google Threat Intelligence Alerts",
+                "contentProductId": "[concat(take(variables('_solutionId'), 50), '-', 'dc', '-', uniqueString(concat(variables('_solutionId'), '-', 'DataConnector', '-', variables('_dataConnectorContentId1'), '-', variables('dataConnectorVersion1'))))]",
+                "id": "[concat(take(variables('_solutionId'), 50), '-', 'dc', '-', uniqueString(concat(variables('_solutionId'), '-', 'DataConnector', '-', variables('_dataConnectorContentId1'), '-', variables('dataConnectorVersion1'))))]",
+                "version": "[variables('dataConnectorVersion1')]"
+            }
+        }
+    ],
+    "outputs": {}
+}

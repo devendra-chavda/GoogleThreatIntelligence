@@ -1,0 +1,121 @@
+{
+    "id": "GoogleThreatIntelligenceAlertsAPI",
+    "title": "Google Threat Intelligence Alerts",
+    "publisher": "Google",
+    "descriptionMarkdown": "The [Google Threat Intelligence (GTI)](https://cloud.google.com/threat-intelligence) data connector ingests GTI alerts into Microsoft Sentinel. The connector polls the GTI Alerts API on a configurable schedule and stores alert data in the GTIAlerts_CL custom table, enabling security analysts to investigate threats, correlate incidents, and respond to intelligence-driven alerts within the Sentinel workspace.",
+    "graphQueries": [
+        {
+            "metricName": "Total GTI alerts received",
+            "legend": "GTIAlerts_CL",
+            "baseQuery": "GTIAlerts_CL"
+        }
+    ],
+    "sampleQueries": [
+        {
+            "description": "All GTI Alerts (latest first)",
+            "query": "GTIAlerts_CL\n| sort by TimeGenerated desc"
+        },
+        {
+            "description": "GTI Alerts by severity",
+            "query": "GTIAlerts_CL\n| extend severity = coalesce(severityAnalysis_severityLevel, detail_dataLeak_severity, detail_insiderThreat_severity, detail_initialAccessBroker_severity)\n| summarize count() by severity\n| sort by count_ desc"
+        },
+        {
+            "description": "GTI Alerts by state",
+            "query": "GTIAlerts_CL\n| summarize count() by state\n| sort by count_ desc"
+        },
+        {
+            "description": "High and critical priority GTI Alerts",
+            "query": "GTIAlerts_CL\n| where priorityAnalysis_priorityLevel in ('PRIORITY_LEVEL_HIGH', 'PRIORITY_LEVEL_CRITICAL')\n| project TimeGenerated, displayName, state, priorityAnalysis_priorityLevel, severityAnalysis_severityLevel, detail_detailType\n| sort by TimeGenerated desc"
+        }
+    ],
+    "dataTypes": [
+        {
+            "name": "GTIAlerts_CL",
+            "lastDataReceivedQuery": "GTIAlerts_CL\n            | summarize Time = max(TimeGenerated)\n            | where isnotempty(Time)"
+        }
+    ],
+    "connectivityCriterias": [
+        {
+            "type": "IsConnectedQuery",
+            "value": [
+                "GTIAlerts_CL\n            | summarize LastLogReceived = max(TimeGenerated)\n            | project IsConnected = LastLogReceived > ago(30d)"
+            ]
+        }
+    ],
+    "availability": {
+        "status": 1,
+        "isPreview": true
+    },
+    "permissions": {
+        "resourceProvider": [
+            {
+                "provider": "Microsoft.OperationalInsights/workspaces",
+                "permissionsDisplayText": "Read and write permissions on the workspace are required.",
+                "providerDisplayName": "Workspace",
+                "scope": "Workspace",
+                "requiredPermissions": {
+                    "write": true,
+                    "read": true,
+                    "delete": true
+                }
+            },
+            {
+                "provider": "Microsoft.OperationalInsights/workspaces/sharedKeys",
+                "permissionsDisplayText": "Read permissions to shared keys for the workspace are required. [See the documentation to learn more about workspace keys](https://docs.microsoft.com/azure/azure-monitor/platform/agent-windows#obtain-workspace-id-and-key).",
+                "providerDisplayName": "Keys",
+                "scope": "Workspace",
+                "requiredPermissions": {
+                    "action": true
+                }
+            }
+        ],
+        "customs": [
+            {
+                "name": "Azure Subscription",
+                "description": "An Azure Subscription with owner role is required to register an application in Microsoft Entra ID and assign the contributor role to the app in the resource group."
+            },
+            {
+                "name": "Microsoft.Web/sites permissions",
+                "description": "Read and write permissions to Azure Functions to create a Function App are required. [See the documentation to learn more about Azure Functions](https://docs.microsoft.com/azure/azure-functions/)."
+            },
+            {
+                "name": "Google Threat Intelligence API Key",
+                "description": "A Google Threat Intelligence API key and project ID are required. See the [GTI documentation](https://cloud.google.com/threat-intelligence/docs) to learn how to obtain an API key."
+            }
+        ]
+    },
+    "instructionSteps": [
+        {
+            "title": "Step 1 — Register a Microsoft Entra App for Sentinel Log Ingestion",
+            "description": "Register an application in Microsoft Entra ID to authenticate the Function App with the Log Ingestion API.\n\n1. Navigate to **Microsoft Entra ID** > **App registrations** > **New registration**.\n2. Enter a name (e.g., `GTIAlertsSentinelConnector`) and click **Register**.\n3. Copy the **Application (Client) ID** and **Directory (Tenant) ID**.\n4. Under **Certificates & secrets**, create a **New client secret** and copy the value.\n5. Under **Enterprise applications**, find your registered app and copy the **Object ID** (this is the `AzureEntraObjectID` parameter)."
+        },
+        {
+            "title": "Step 2 — Obtain Google Threat Intelligence API Credentials",
+            "description": "1. Log in to the [Google Threat Intelligence portal](https://cloud.google.com/threat-intelligence).\n2. Navigate to your GTI project settings and copy the **Project ID**.\n3. Generate an **API Key** for your project and copy it securely."
+        },
+        {
+            "title": "Step 3 — Deploy the Azure Function App",
+            "description": "Click the **Deploy to Azure** button below to deploy the GTI Alerts connector Function App. You will be prompted to provide the parameters collected in Steps 1 and 2.\n\n**Azure Commercial:**",
+            "instructions": [
+                {
+                    "parameters": {
+                        "linkType": "OpenDeploymentDialog",
+                        "linkedTemplate": "https://aka.ms/sentinel-GoogleThreatIntelligenceAlerts-azuredeploy"
+                    },
+                    "type": "InstallAgent"
+                },
+                {
+                    "parameters": {
+                        "linkType": "OpenDeploymentDialog",
+                        "linkedTemplate": "https://aka.ms/sentinel-GoogleThreatIntelligenceAlerts-azuredeploy-gov"
+                    },
+                    "type": "InstallAgent"
+                }
+            ]
+        },
+        {
+            "title": "Step 4 — Verify Data Ingestion",
+            "description": "After deploying the Function App, verify that data is being ingested into Microsoft Sentinel by running the following query in the Log Analytics workspace:\n\n```kusto\nGTIAlerts_CL\n| sort by TimeGenerated desc\n| take 10\n```\n\nAllow up to 30 minutes after the first function execution for data to appear."
+        }
+    ]
+}
