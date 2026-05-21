@@ -119,6 +119,14 @@ class GTIClient:
             if response.status_code == 200:
                 response_json = response.json()
                 self._access_token = response_json.get("access_token")
+                applogger.info(
+                    consts.LOG_FORMAT.format(
+                        consts.LOGS_STARTS_WITH,
+                        __method_name,
+                        "GTIClient",
+                        "Successfully response_json={}s".format(response_json),
+                    )
+                )
                 expires_in = response_json.get("expires_in", 3600)
                 self._token_expiry = time.time() + expires_in
                 if not self._access_token:
