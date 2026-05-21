@@ -111,7 +111,7 @@ class GTIClient:
             response = requests.request(
                 method="POST",
                 url=consts.GTI_TOKEN_EXCHANGE_URL,
-                json={"api_key": consts.GTI_API_KEY},
+                data={"api_key": consts.GTI_API_KEY},
                 headers={"Content-Type": "application/json"},
                 timeout=consts.MAX_TIMEOUT_SENTINEL,
             )
