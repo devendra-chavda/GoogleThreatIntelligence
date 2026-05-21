@@ -5,6 +5,7 @@ Handles token exchange, token caching, and alert pagination for the GTI API.
 
 import inspect
 import time
+import json
 import requests
 from json.decoder import JSONDecodeError
 from tenacity import (
@@ -108,10 +109,13 @@ class GTIClient:
                     "Exchanging GTI API key for Bearer token",
                 )
             )
+            payload = json.dumps({
+                "api_key": consts.GTI_API_KEY
+            })
             response = requests.request(
                 method="POST",
                 url=consts.GTI_TOKEN_EXCHANGE_URL,
-                data={"api_key": consts.GTI_API_KEY},
+                data=payload,
                 headers={"Content-Type": "application/json"},
                 timeout=consts.MAX_TIMEOUT_SENTINEL,
             )
