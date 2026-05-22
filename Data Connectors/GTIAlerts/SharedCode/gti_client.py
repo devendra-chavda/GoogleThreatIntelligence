@@ -34,7 +34,7 @@ def _retry_on_status_code(response):
         bool: True if the response should be retried, False otherwise.
     """
     __method_name = inspect.currentframe().f_code.co_name
-    if isinstance(response, dict):
+    if response is None or isinstance(response, dict):
         return False
     if response.status_code in consts.RETRY_STATUS_CODE:
         applogger.info(
