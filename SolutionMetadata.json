@@ -2,7 +2,7 @@
     "publisherId": "google",
     "offerId": "google-threat-intelligence-sentinel",
     "firstPublishDate": "2026-05-21",
-    "lastPublishDate": "2026-05-21",
+    "lastPublishDate": "2026-05-22",
     "providers": [
         "Google"
     ],
@@ -11,5 +11,13 @@
             "Security - Threat Intelligence"
         ],
         "verticals": []
+    },
+    "version": "3.0.0",
+    "title": "Google Threat Intelligence",
+    "description": "The Google Threat Intelligence solution for Microsoft Sentinel ingests GTI alerts into Microsoft Sentinel via a timer-triggered Azure Function. Alert data is stored in the GTIAlerts_CL custom table, enabling security analysts to investigate threats, correlate incidents, and respond to intelligence-driven alerts within the Sentinel workspace.",
+    "support": {
+        "name": "Google",
+        "tier": "Partner",
+        "link": "https://cloud.google.com/threat-intelligence/docs/support"
     }
 }

@@ -95,7 +95,7 @@
         },
         {
             "title": "Step 3 — Deploy the Azure Function App",
-            "description": "Click the **Deploy to Azure** button below to deploy the GTI Alerts connector Function App. You will be prompted to provide the parameters collected in Steps 1 and 2.\n\n**Azure Commercial:**",
+            "description": "Click the **Deploy to Azure** button below to deploy the GTI Alerts connector Function App. You will be prompted to provide the parameters collected in Steps 1 and 2.\n\n**GTI Filter Expression (optional):** You can supply a custom GTI API filter expression (e.g. `state = \"OPEN\"`) in the **GTIFilterExpression** deployment parameter to narrow which alerts are ingested. Note: any `audit.update_time` condition in your expression will be automatically removed — the connector manages this filter internally to maintain the ingestion checkpoint. Your expression is combined with the checkpoint filter using `AND`.\n\n**Azure Commercial:**",
             "instructions": [
                 {
                     "parameters": {

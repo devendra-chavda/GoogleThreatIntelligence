@@ -29,18 +29,12 @@ GTI_ALERTS_TABLE_NAME = "GTIAlerts"
 CONN_STRING = os.environ.get("AzureWebJobsStorage", "")
 FILE_SHARE_NAME = os.environ.get("File_Share_Name", "gti-connector-state")
 START_DATE = os.environ.get("StartDate", "")
-
-# *Schedule
-SCHEDULE = os.environ.get("Schedule", "0 */10 * * * *")
+GTI_FILTER_EXPRESSION = os.environ.get("GTI_FILTER_EXPRESSION", "")
 
 # *Error messages for exceptions
 UNEXPECTED_ERROR_MSG = "Unexpected error : Error-{}"
-HTTP_ERROR_MSG = "HTTP error : Error-{}"
-REQUEST_ERROR_MSG = "Request error : Error-{}"
 CONNECTION_ERROR_MSG = "Connection error : Error-{}"
-KEY_ERROR_MSG = "Key error : Error-{}"
 TYPE_ERROR_MSG = "Type error : Error-{}"
-VALUE_ERROR_MSG = "Value error : Error-{}"
 JSON_DECODE_ERROR_MSG = "JSONDecode error : Error-{}"
 TIME_OUT_ERROR_MSG = "Timeout error : Error-{}"
 MAX_RETRY_ERROR_MSG = "Max retries exceeded : {} Last exception: {}"
@@ -58,11 +52,9 @@ FUNCTION_APP_TIMEOUT_SECONDS = 570
 
 # *Data constants
 PAGE_SIZE = 1000
-BATCH_SIZE = 500
 DEFAULT_LOOKUP_DAYS = 7
 
 # *Status code handling
-EXCEPTION_STATUS_CODE = [400, 403, 409]
 RETRY_STATUS_CODE = [429, 500, 503, 502, 509]
 
 # *Token expiry buffer in seconds (refresh token 60 seconds before expiry)

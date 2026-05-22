@@ -79,7 +79,7 @@
             "defaultValue": "",
             "type": "string",
             "metadata": {
-                "description": "Enter the start date in 'yyyy-mm-dd' format. If not provided, data from the last 7 days will be fetched. Ensure the date is in the past."
+                "description": "Enter the start datetime in 'yyyy-mm-ddTHH:MM:SS[.fff]Z' format (e.g. 2026-05-20T15:43:51.16Z). If not provided, data from the last 7 days will be fetched. Ensure the value is in the past."
             }
         },
         "Schedule": {
@@ -106,6 +106,13 @@
             "type": "string",
             "metadata": {
                 "description": "Enter the fully qualified resource ID of the Log Analytics workspace for Application Insights. Format: '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}'"
+            }
+        },
+        "GTIFilterExpression": {
+            "defaultValue": "",
+            "type": "string",
+            "metadata": {
+                "description": "Optional GTI API filter expression to narrow which alerts are ingested (e.g. 'state = \"OPEN\"'). Any 'audit.update_time' condition in this value will be automatically removed — the connector manages that filter internally to maintain the checkpoint. The provided expression is combined with the checkpoint filter using AND."
             }
         }
     },
@@ -492,7 +499,8 @@
                         "SCOPE": "[variables('scope')]",
                         "AZURE_DATA_COLLECTION_ENDPOINT": "[reference(resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('endpointName')), '2022-06-01').logsIngestion.endpoint]",
                         "AZURE_DATA_COLLECTION_RULE_ID": "[reference(resourceId('Microsoft.Insights/dataCollectionRules', variables('mainRuleName')), '2022-06-01').immutableId]",
-                        "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/devendra-chavda/GoogleThreatIntelligence/raw/refs/heads/main/Data%20Connectors/GTIAlerts/GTIAlerts.zip"
+                        "GTI_FILTER_EXPRESSION": "[trim(parameters('GTIFilterExpression'))]",
+                        "WEBSITE_RUN_FROM_PACKAGE": "https://raw.githubusercontent.com/Azure/Azure-Sentinel/master/Solutions/GoogleThreatIntelligence/Data%20Connectors/GTIAlerts/GTIAlerts.zip"
                     }
                 }
             ]

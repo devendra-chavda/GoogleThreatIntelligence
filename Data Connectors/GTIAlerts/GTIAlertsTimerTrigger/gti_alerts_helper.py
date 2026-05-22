@@ -1,6 +1,7 @@
 """Get GTI Alerts data and ingest into Microsoft Sentinel."""
 
 import inspect
+import re
 import time
 import datetime
 
@@ -37,18 +38,6 @@ class GTIAlertsHelper(Utils):
             start_time (int): Unix epoch timestamp of function start (for timeout guard).
         """
         super().__init__(FUNCTION_NAME)
-        self.check_environment_var_exist(
-            [
-                {"GTI_API_KEY": consts.GTI_API_KEY},
-                {"GTI_PROJECT_ID": consts.GTI_PROJECT_ID},
-                {"AZURE_CLIENT_ID": consts.AZURE_CLIENT_ID},
-                {"AZURE_CLIENT_SECRET": consts.AZURE_CLIENT_SECRET},
-                {"AZURE_TENANT_ID": consts.AZURE_TENANT_ID},
-                {"AZURE_DATA_COLLECTION_ENDPOINT": consts.AZURE_DATA_COLLECTION_ENDPOINT},
-                {"AZURE_DATA_COLLECTION_RULE_ID": consts.DCR_RULE_ID},
-                {"AzureWebJobsStorage": consts.CONN_STRING},
-            ]
-        )
         self.start = start_time
         self.gti_client = GTIClient()
         self.checkpoint_obj = StateManager(
@@ -111,13 +100,68 @@ class GTIAlertsHelper(Utils):
                 "Unexpected error during GTI alerts ingestion: {}".format(err)
             )
 
+    def _build_filter_expression(self, last_checkpoint: str) -> str:
+        """Build the GTI API filter expression combining the checkpoint time and optional user filter.
+
+        The base filter is always: audit.update_time >= "<checkpoint>".
+        If GTI_FILTER_EXPRESSION is set, each AND-separated clause is inspected and
+        any clause containing audit.update_time is dropped (it conflicts with the
+        checkpoint filter). The remaining clauses are then combined with the base
+        filter using AND.
+
+        Example:
+            user filter : 'detail.insider_threat.severity = "HIGH" and audit.update_time >= "2026-04-03T00:00:00Z"'
+            effective   : 'audit.update_time >= "<checkpoint>" and detail.insider_threat.severity = "HIGH"'
+
+        Args:
+            last_checkpoint (str): ISO 8601 checkpoint timestamp.
+
+        Returns:
+            str: The combined filter expression ready to pass to the GTI API.
+        """
+        __method_name = inspect.currentframe().f_code.co_name
+        base_filter = 'audit.update_time >= "{}"'.format(last_checkpoint)
+        user_filter = consts.GTI_FILTER_EXPRESSION.strip()
+
+        if not user_filter:
+            return base_filter
+
+        # Split on AND (case-insensitive), strip each clause, drop any containing audit.update_time
+        clauses = re.split(r'\s+and\s+', user_filter, flags=re.IGNORECASE)
+        kept = [c.strip() for c in clauses if "audit.update_time" not in c.lower()]
+        removed = [c.strip() for c in clauses if "audit.update_time" in c.lower()]
+
+        if removed:
+            applogger.info(
+                self.log_format.format(
+                    consts.LOGS_STARTS_WITH,
+                    __method_name,
+                    self.azure_function_name,
+                    "Removed audit.update_time clause(s) from user filter: {}".format(removed),
+                )
+            )
+
+        if not kept:
+            return base_filter
+
+        combined = "{} and {}".format(base_filter, " and ".join(kept))
+        applogger.info(
+            self.log_format.format(
+                consts.LOGS_STARTS_WITH,
+                __method_name,
+                self.azure_function_name,
+                "Combined filter expression: {}".format(combined),
+            )
+        )
+        return combined
+
     def _fetch_and_ingest_alerts(self, last_checkpoint: str):
         """Paginate through GTI alerts and ingest them into Sentinel.
 
         Iterates through all pages of GTI alerts since the given checkpoint timestamp.
         Saves the checkpoint incrementally after processing each batch to support
         resuming after a timeout or crash. The checkpoint is updated to the
-        createTime of the most recent alert in each page.
+        updateTime of the most recent alert in each page.
 
         Args:
             last_checkpoint (str): ISO 8601 timestamp to filter alerts from.
@@ -128,7 +172,7 @@ class GTIAlertsHelper(Utils):
         """
         __method_name = inspect.currentframe().f_code.co_name
         try:
-            filter_expr = 'audit.create_time >= "{}"'.format(last_checkpoint)
+            filter_expr = self._build_filter_expression(last_checkpoint)
             page_token = None
             page_number = 0
             total_ingested = 0
@@ -164,10 +208,8 @@ class GTIAlertsHelper(Utils):
 
                 try:
                     response = self.gti_client.list_alerts(
-                        project=consts.GTI_PROJECT_ID,
-                        filter_expr=filter_expr if not page_token else None,
+                        filter_expr=filter_expr,
                         page_token=page_token,
-                        page_size=consts.PAGE_SIZE,
                     )
                 except RetryError as error:
                     applogger.error(
@@ -199,28 +241,25 @@ class GTIAlertsHelper(Utils):
                 )
 
                 if alerts:
-                    # Update latest checkpoint from the most recent alert's createTime
-                    latest_create_time = self._extract_latest_create_time(alerts)
-                    if latest_create_time and latest_create_time > latest_checkpoint:
-                        latest_checkpoint = latest_create_time
-
-                    # Ingest alerts in batches
-                    for batch_start in range(0, len(alerts), consts.BATCH_SIZE):
-                        batch = alerts[batch_start: batch_start + consts.BATCH_SIZE]
-                        send_data_to_sentinel(batch, consts.GTI_ALERTS_TABLE_NAME)
-                        total_ingested += len(batch)
-                        applogger.info(
-                            self.log_format.format(
-                                consts.LOGS_STARTS_WITH,
-                                __method_name,
-                                self.azure_function_name,
-                                "Ingested batch of {} alerts, total ingested so far: {}".format(
-                                    len(batch), total_ingested
-                                ),
-                            )
+                    send_data_to_sentinel(alerts, consts.GTI_ALERTS_TABLE_NAME)
+                    total_ingested += len(alerts)
+                    applogger.info(
+                        self.log_format.format(
+                            consts.LOGS_STARTS_WITH,
+                            __method_name,
+                            self.azure_function_name,
+                            "Ingested {} alerts, total ingested so far: {}".format(
+                                len(alerts), total_ingested
+                            ),
                         )
+                    )
 
-                    # Save checkpoint incrementally after each page
+                    # Response is ordered by audit.update_time asc, so the last alert
+                    # in the page has the newest updateTime — use it as the checkpoint.
+                    last_update_time = alerts[-1].get("audit", {}).get("updateTime", "")
+                    if last_update_time and last_update_time > latest_checkpoint:
+                        latest_checkpoint = last_update_time
+
                     self.post_checkpoint_data(
                         self.checkpoint_obj,
                         {"last_checkpoint": latest_checkpoint},
@@ -265,34 +304,3 @@ class GTIAlertsHelper(Utils):
                 "Unexpected error during alert pagination and ingestion: {}".format(err)
             )
 
-    def _extract_latest_create_time(self, alerts: list) -> str:
-        """Extract the most recent createTime from a list of alerts.
-
-        Iterates through the alerts and returns the maximum createTime value.
-        The createTime is sourced from the camelCase 'audit.createTime' field
-        in the GTI API response.
-
-        Args:
-            alerts (list): List of alert dicts from GTI API response.
-
-        Returns:
-            str: The latest createTime string found, or empty string if none found.
-        """
-        __method_name = inspect.currentframe().f_code.co_name
-        latest = ""
-        try:
-            for alert in alerts:
-                audit = alert.get("audit", {})
-                create_time = audit.get("createTime", "")
-                if create_time and create_time > latest:
-                    latest = create_time
-        except Exception as err:
-            applogger.error(
-                self.log_format.format(
-                    consts.LOGS_STARTS_WITH,
-                    __method_name,
-                    self.azure_function_name,
-                    "Error extracting latest createTime: {}".format(err),
-                )
-            )
-        return latest

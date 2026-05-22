@@ -30,82 +30,14 @@ class Utils:
         self.azure_function_name = azure_function_name
         self.log_format = consts.LOG_FORMAT
 
-    def check_environment_var_exist(self, environment_var):
-        """Check the existence of required environment variables.
-
-        Logs the validation process and completion. Raises GTIAlertsException
-        if any required variable is missing.
-
-        Args:
-            environment_var (list): List of dicts mapping variable name to value.
-        """
-        __method_name = inspect.currentframe().f_code.co_name
-        try:
-            applogger.info(
-                self.log_format.format(
-                    consts.LOGS_STARTS_WITH,
-                    __method_name,
-                    self.azure_function_name,
-                    "Validating Environment Variables",
-                )
-            )
-            missing_required_field = False
-            for var in environment_var:
-                key, val = next(iter(var.items()))
-                if not val:
-                    missing_required_field = True
-                    applogger.error(
-                        self.log_format.format(
-                            consts.LOGS_STARTS_WITH,
-                            __method_name,
-                            self.azure_function_name,
-                            "Environment variable {} is not set".format(key),
-                        )
-                    )
-            if missing_required_field:
-                applogger.error(
-                    self.log_format.format(
-                        consts.LOGS_STARTS_WITH,
-                        __method_name,
-                        self.azure_function_name,
-                        "Validation failed: one or more required environment variables are missing",
-                    )
-                )
-                raise GTIAlertsException(
-                    "One or more required environment variables are missing"
-                )
-            applogger.info(
-                self.log_format.format(
-                    consts.LOGS_STARTS_WITH,
-                    __method_name,
-                    self.azure_function_name,
-                    "Environment variable validation complete",
-                )
-            )
-        except GTIAlertsException:
-            raise
-        except Exception as err:
-            applogger.error(
-                self.log_format.format(
-                    consts.LOGS_STARTS_WITH,
-                    __method_name,
-                    self.azure_function_name,
-                    consts.UNEXPECTED_ERROR_MSG.format(err),
-                )
-            )
-            raise GTIAlertsException(
-                "Unexpected error during environment variable validation: {}".format(err)
-            )
-
-    def get_checkpoint_data(self, checkpoint_obj: StateManager, load_flag=True):
+    def get_checkpoint_data(self, checkpoint_obj: StateManager):
         """Get checkpoint data from a StateManager object.
 
         Args:
             checkpoint_obj (StateManager): The StateManager object to retrieve checkpoint data from.
-            load_flag (bool): A flag indicating whether to load the data as JSON (default is True).
 
         Returns:
-            dict or str or None: The retrieved checkpoint data.
+            dict or None: The retrieved checkpoint data parsed as JSON, or None if no checkpoint exists.
 
         Raises:
             GTIAlertsException: If there is an error reading or parsing checkpoint data.
@@ -121,7 +53,7 @@ class Utils:
                 )
             )
             checkpoint_data = checkpoint_obj.get()
-            if load_flag and checkpoint_data:
+            if checkpoint_data:
                 checkpoint_data = json.loads(checkpoint_data)
             applogger.info(
                 self.log_format.format(
@@ -157,13 +89,12 @@ class Utils:
                 "Unexpected error reading checkpoint: {}".format(err)
             )
 
-    def post_checkpoint_data(self, checkpoint_obj: StateManager, data, dump_flag=True):
+    def post_checkpoint_data(self, checkpoint_obj: StateManager, data):
         """Post checkpoint data to a StateManager object.
 
         Args:
             checkpoint_obj (StateManager): The StateManager object to post data to.
-            data: The data to be posted.
-            dump_flag (bool): Whether to JSON-serialise data before posting (default is True).
+            data (dict): The data to be JSON-serialised and posted.
 
         Raises:
             GTIAlertsException: If there is an error writing checkpoint data.
@@ -178,10 +109,7 @@ class Utils:
                     "Posting checkpoint data = {}".format(data),
                 )
             )
-            if dump_flag:
-                checkpoint_obj.post(json.dumps(data))
-            else:
-                checkpoint_obj.post(data)
+            checkpoint_obj.post(json.dumps(data))
             applogger.info(
                 self.log_format.format(
                     consts.LOGS_STARTS_WITH,
@@ -222,6 +150,8 @@ class Utils:
         a default lookback window of DEFAULT_LOOKUP_DAYS days from now.
         If a start date is provided but is invalid or in the future, raises an exception.
 
+        Accepts full datetime format: 2026-05-20T15:43:51.16Z (fractional seconds optional).
+
         Returns:
             str: The start date for data fetching in DATE_TIME_FORMAT.
 
@@ -247,9 +177,9 @@ class Utils:
                 )
                 return start_date
             try:
-                start_date = datetime.datetime.strptime(
-                    consts.START_DATE, "%Y-%m-%d"
-                ).strftime(consts.DATE_TIME_FORMAT)
+                # Strip trailing Z and parse; fromisoformat handles optional fractional seconds
+                dt = datetime.datetime.fromisoformat(consts.START_DATE.rstrip("Z"))
+                start_date = dt.strftime(consts.DATE_TIME_FORMAT)
                 applogger.info(
                     self.log_format.format(
                         consts.LOGS_STARTS_WITH,
@@ -277,13 +207,13 @@ class Utils:
                         consts.LOGS_STARTS_WITH,
                         __method_name,
                         self.azure_function_name,
-                        "StartDate '{}' is not a valid date in yyyy-mm-dd format".format(
+                        "StartDate '{}' is not a valid datetime in yyyy-mm-ddTHH:MM:SS[.fff]Z format".format(
                             consts.START_DATE
                         ),
                     )
                 )
                 raise GTIAlertsException(
-                    "StartDate '{}' is not a valid date in yyyy-mm-dd format".format(
+                    "StartDate '{}' is not a valid datetime in yyyy-mm-ddTHH:MM:SS[.fff]Z format".format(
                         consts.START_DATE
                     )
                 )
