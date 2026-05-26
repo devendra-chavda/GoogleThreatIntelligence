@@ -500,7 +500,7 @@
                         "AZURE_DATA_COLLECTION_ENDPOINT": "[reference(resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('endpointName')), '2022-06-01').logsIngestion.endpoint]",
                         "AZURE_DATA_COLLECTION_RULE_ID": "[reference(resourceId('Microsoft.Insights/dataCollectionRules', variables('mainRuleName')), '2022-06-01').immutableId]",
                         "GTI_FILTER_EXPRESSION": "[trim(parameters('GTIFilterExpression'))]",
-                        "WEBSITE_RUN_FROM_PACKAGE": "https://raw.githubusercontent.com/Azure/Azure-Sentinel/master/Solutions/GoogleThreatIntelligence/Data%20Connectors/GTIRelevanceSystemAlerts/GTIRelevanceSystemAlerts.zip"
+                        "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/devendra-chavda/GoogleThreatIntelligence/raw/refs/heads/main/Data%20Connectors/GTIRelevanceSystemAlerts/GTIRelevanceSystemAlerts.zip"
                     }
                 }
             ]
