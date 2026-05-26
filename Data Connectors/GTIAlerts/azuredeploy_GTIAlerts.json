@@ -15,7 +15,7 @@
             "defaultValue": "[resourceGroup().location]",
             "type": "string",
             "metadata": {
-                "description": "The location in which the data collection rules and data collection endpoints should be deployed."
+                "description": "The location in which the Function App, data collection endpoint, and data collection rule will be deployed"
             }
         },
         "WorkspaceName": {
@@ -23,6 +23,19 @@
             "minLength": 1,
             "metadata": {
                 "description": "Enter the Microsoft Sentinel Log Analytics workspace name"
+            }
+        },
+        "AppInsightsWorkspaceResourceID": {
+            "type": "string",
+            "metadata": {
+                "description": "Enter the fully qualified resource ID of the Log Analytics workspace for Application Insights. Format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}"
+            }
+        },
+        "AzureTenantID": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "Enter the Azure Tenant ID of your Azure Active Directory"
             }
         },
         "AzureClientID": {
@@ -39,25 +52,11 @@
                 "description": "Enter the Azure Client Secret created for the app registration"
             }
         },
-        "AzureTenantID": {
-            "type": "string",
-            "minLength": 1,
-            "metadata": {
-                "description": "Enter the Azure Tenant ID of your Azure Active Directory"
-            }
-        },
         "AzureEntraObjectID": {
             "type": "string",
             "minLength": 1,
             "metadata": {
                 "description": "Enter the Object ID of your Microsoft Entra app (from Enterprise Applications)"
-            }
-        },
-        "GTIApiKey": {
-            "type": "securestring",
-            "minLength": 1,
-            "metadata": {
-                "description": "Enter the Google Threat Intelligence API key"
             }
         },
         "GTIProjectId": {
@@ -67,26 +66,40 @@
                 "description": "Enter the Google Threat Intelligence project ID"
             }
         },
+        "GTIApiKey": {
+            "type": "securestring",
+            "minLength": 1,
+            "metadata": {
+                "description": "Enter the Google Threat Intelligence API key"
+            }
+        },
         "GTIAlertsTableName": {
             "type": "string",
             "defaultValue": "GTIAlerts",
             "maxLength": 52,
             "metadata": {
-                "description": "Enter the name of the custom table for GTI alerts. The '_CL' suffix will be appended automatically. Default is 'GTIAlerts'"
+                "description": "Enter the name of the custom table for GTI alerts. The _CL suffix will be appended automatically. Default is GTIAlerts"
             }
         },
         "StartDate": {
             "defaultValue": "",
             "type": "string",
             "metadata": {
-                "description": "Enter the start datetime in 'yyyy-mm-ddTHH:MM:SS[.fff]Z' format (e.g. 2026-05-20T15:43:51.16Z). If not provided, data from the last 7 days will be fetched. Ensure the value is in the past."
+                "description": "Enter the start datetime in yyyy-mm-ddTHH:MM:SS[.fff]Z format (e.g. 2026-05-20T15:43:51.16Z). If not provided, data from the last 7 days will be fetched. Ensure the value is in the past."
+            }
+        },
+        "GTIFilterExpression": {
+            "defaultValue": "",
+            "type": "string",
+            "metadata": {
+                "description": "Optional GTI API filter expression to narrow which alerts are ingested. Any audit.update_time condition will be automatically removed as the connector manages that filter internally. The expression is combined with the checkpoint filter using AND."
             }
         },
         "Schedule": {
             "type": "string",
             "defaultValue": "0 */10 * * * *",
             "metadata": {
-                "description": "Enter a valid Quartz Cron-Expression for the timer trigger schedule. Default is every 10 minutes (0 */10 * * * *)."
+                "description": "Enter a valid Quartz Cron-Expression for the timer trigger schedule. Default is every 10 minutes: 0 */10 * * * *"
             }
         },
         "LogLevel": {
@@ -99,20 +112,7 @@
                 "Error"
             ],
             "metadata": {
-                "description": "Set the log level for the Function App. Default is 'Info'."
-            }
-        },
-        "AppInsightsWorkspaceResourceID": {
-            "type": "string",
-            "metadata": {
-                "description": "Enter the fully qualified resource ID of the Log Analytics workspace for Application Insights. Format: '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}'"
-            }
-        },
-        "GTIFilterExpression": {
-            "defaultValue": "",
-            "type": "string",
-            "metadata": {
-                "description": "Optional GTI API filter expression to narrow which alerts are ingested (e.g. 'state = \"OPEN\"'). Any 'audit.update_time' condition in this value will be automatically removed — the connector manages that filter internally to maintain the checkpoint. The provided expression is combined with the checkpoint filter using AND."
+                "description": "Set the log level for the Function App. Default is Info."
             }
         }
     },
