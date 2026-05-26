@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "FunctionName": {
-            "defaultValue": "GTIAlerts",
+            "defaultValue": "RelevanceSystemAlerts",
             "minLength": 1,
             "maxLength": 11,
             "type": "string",
@@ -75,15 +75,15 @@
         },
         "GTIAlertsTableName": {
             "type": "string",
-            "defaultValue": "GTIAlerts",
+            "defaultValue": "RelevanceSystemAlerts",
             "maxLength": 52,
             "metadata": {
-                "description": "Enter the name of the custom table for GTI alerts. The _CL suffix will be appended automatically. Default is GTIAlerts"
+                "description": "Enter the name of the custom table for GTI alerts. The _CL suffix will be appended automatically. Default is RelevanceSystemAlerts"
             }
         },
         "StartDate": {
-            "defaultValue": "",
             "type": "string",
+            "minLength": 1,
             "metadata": {
                 "description": "Enter the start datetime in yyyy-mm-ddTHH:MM:SS[.fff]Z format (e.g. 2026-05-20T15:43:51.16Z). If not provided, data from the last 7 days will be fetched. Ensure the value is in the past."
             }
