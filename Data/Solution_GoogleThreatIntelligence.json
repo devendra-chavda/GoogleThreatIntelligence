@@ -4,7 +4,7 @@
   "Logo": "<img src=\"https://raw.githubusercontent.com/Azure/Azure-Sentinel/master/Logos/GoogleThreatIntelligence.svg\" width=\"75px\" height=\"75px\">",
   "Description": "This Google Threat Intelligence Solution contains Playbooks that can help enrich incident information with threat information and intelligence for IPs, file hashes and URLs from Google Threat Intelligence. Enriched information can help drive focused investigations in Security Operations.",
   "Data Connectors": [
-    "Data Connectors/GTIAlerts/GTIAlerts_API_FunctionApp.json"
+    "Data Connectors/GTIRelevanceSystemAlerts/GTIAlerts_API_FunctionApp.json"
   ],
   "Parsers": [],
   "Hunting Queries": [],
