@@ -73,7 +73,7 @@
                 "description": "Enter the Google Threat Intelligence API key"
             }
         },
-        "GTIAlertsTableName": {
+        "GTIRelevanceSystemAlertsTableName": {
             "type": "string",
             "defaultValue": "RelevanceSystemAlerts",
             "maxLength": 52,
@@ -144,11 +144,11 @@
         {
             "type": "Microsoft.OperationalInsights/workspaces/tables",
             "apiVersion": "2022-10-01",
-            "name": "[concat(parameters('WorkspaceName'), '/', parameters('GTIAlertsTableName'), '_CL')]",
+            "name": "[concat(parameters('WorkspaceName'), '/', parameters('GTIRelevanceSystemAlertsTableName'), '_CL')]",
             "properties": {
                 "plan": "Analytics",
                 "schema": {
-                    "name": "[concat(parameters('GTIAlertsTableName'), '_CL')]",
+                    "name": "[concat(parameters('GTIRelevanceSystemAlertsTableName'), '_CL')]",
                     "columns": [
                         {
                             "Name": "TimeGenerated",
@@ -281,12 +281,12 @@
             "location": "[parameters('Location')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('endpointName'))]",
-                "[concat(variables('logWsResId'), '/tables/', parameters('GTIAlertsTableName'), '_CL')]"
+                "[concat(variables('logWsResId'), '/tables/', parameters('GTIRelevanceSystemAlertsTableName'), '_CL')]"
             ],
             "properties": {
                 "dataCollectionEndpointId": "[resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('endpointName'))]",
                 "streamDeclarations": {
-                    "[concat('Custom-', parameters('GTIAlertsTableName'))]": {
+                    "[concat('Custom-', parameters('GTIRelevanceSystemAlertsTableName'))]": {
                         "columns": [
                             {
                                 "Name": "TimeGenerated",
@@ -354,13 +354,13 @@
                 "dataFlows": [
                     {
                         "streams": [
-                            "[concat('Custom-', parameters('GTIAlertsTableName'))]"
+                            "[concat('Custom-', parameters('GTIRelevanceSystemAlertsTableName'))]"
                         ],
                         "destinations": [
                             "[concat('RuleDest', variables('suffix'))]"
                         ],
                         "transformKql": "source\n| extend TimeGenerated = now()\n| extend json_audit = parse_json(audit), json_detail = parse_json(detail), json_relevanceAnalysis = parse_json(relevanceAnalysis), json_severityAnalysis = parse_json(severityAnalysis), json_priorityAnalysis = parse_json(priorityAnalysis)\n| extend json_detail_dataLeak = parse_json(json_detail.dataLeak), json_detail_insiderThreat = parse_json(json_detail.insiderThreat), json_detail_initialAccessBroker = parse_json(json_detail.initialAccessBroker), json_relevance_evidence = parse_json(json_relevanceAnalysis.evidence)\n| extend audit_createTime = todatetime(json_audit.createTime), audit_updateTime = todatetime(json_audit.updateTime), audit_creator = tostring(json_audit.creator), audit_updater = tostring(json_audit.updater)\n| extend detail_detailType = tostring(json_detail.detailType), detail_dataLeak_severity = tostring(json_detail_dataLeak.severity), detail_dataLeak_discoveryDocumentIds = json_detail_dataLeak.discoveryDocumentIds\n| extend detail_insiderThreat_severity = tostring(json_detail_insiderThreat.severity), detail_insiderThreat_discoveryDocumentIds = json_detail_insiderThreat.discoveryDocumentIds\n| extend detail_initialAccessBroker_severity = tostring(json_detail_initialAccessBroker.severity), detail_initialAccessBroker_discoveryDocumentIds = json_detail_initialAccessBroker.discoveryDocumentIds\n| extend relevanceAnalysis_relevant = tobool(json_relevanceAnalysis.relevant), relevanceAnalysis_relevanceLevel = tostring(json_relevanceAnalysis.relevanceLevel), relevanceAnalysis_confidence = tostring(json_relevanceAnalysis.confidence), relevanceAnalysis_reasoning = tostring(json_relevanceAnalysis.reasoning)\n| extend relevanceAnalysis_evidence_commonThemes = json_relevance_evidence.commonThemes, relevanceAnalysis_evidence_distinctThemes = json_relevance_evidence.distinctThemes\n| extend severityAnalysis_severityLevel = tostring(json_severityAnalysis.severityLevel), severityAnalysis_confidence = tostring(json_severityAnalysis.confidence), severityAnalysis_reasoning = tostring(json_severityAnalysis.reasoning)\n| extend priorityAnalysis_priorityLevel = tostring(json_priorityAnalysis.priorityLevel), priorityAnalysis_reasoning = tostring(json_priorityAnalysis.reasoning)\n| project-away json_audit, json_detail, json_relevanceAnalysis, json_severityAnalysis, json_priorityAnalysis, json_detail_dataLeak, json_detail_insiderThreat, json_detail_initialAccessBroker, json_relevance_evidence, audit, detail, relevanceAnalysis, severityAnalysis, priorityAnalysis",
-                        "outputStream": "[concat('Custom-', parameters('GTIAlertsTableName'), '_CL')]"
+                        "outputStream": "[concat('Custom-', parameters('GTIRelevanceSystemAlertsTableName'), '_CL')]"
                     }
                 ]
             }
