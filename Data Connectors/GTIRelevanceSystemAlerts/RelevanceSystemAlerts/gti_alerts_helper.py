@@ -317,28 +317,28 @@ class GTIAlertsHelper(Utils):
                                 ),
                             )
                         )
+                        
+                        # --- Checkpoint and boundary-hash update ---
+                        # Alerts are sorted asc, so the last alert has the newest updateTime.
+                        # If it's newer than the current checkpoint, advance the checkpoint
+                        # and reset the boundary hash list. Then collect hashes of all
+                        # alerts sharing that boundary time (may span multiple pages).
+                        last_update_time = new_alerts[-1].get("audit", {}).get("updateTime", "")
+                        if last_update_time and last_update_time > latest_checkpoint:
+                            latest_checkpoint = last_update_time
+                            boundary_hashes = set()
 
-                    # --- Checkpoint and boundary-hash update ---
-                    # Alerts are sorted asc, so the last alert has the newest updateTime.
-                    # If it's newer than the current checkpoint, advance the checkpoint
-                    # and reset the boundary hash list. Then collect hashes of all
-                    # alerts sharing that boundary time (may span multiple pages).
-                    last_update_time = new_alerts[-1].get("audit", {}).get("updateTime", "")
-                    if last_update_time and last_update_time > latest_checkpoint:
-                        latest_checkpoint = last_update_time
-                        boundary_hashes = set()
+                        for alert in new_alerts:
+                            if alert.get("audit", {}).get("updateTime", "") == latest_checkpoint:
+                                boundary_hashes.add(self._hash_alert(alert))
 
-                    for alert in new_alerts:
-                        if alert.get("audit", {}).get("updateTime", "") == latest_checkpoint:
-                            boundary_hashes.add(self._hash_alert(alert))
-
-                    self.post_checkpoint_data(
-                        self.checkpoint_obj,
-                        {
-                            "last_checkpoint": latest_checkpoint,
-                            "ingested_hashes": list(boundary_hashes),
-                        },
-                    )
+                        self.post_checkpoint_data(
+                            self.checkpoint_obj,
+                            {
+                                "last_checkpoint": latest_checkpoint,
+                                "ingested_hashes": list(boundary_hashes),
+                            },
+                        )
 
                 if not next_page_token:
                     applogger.info(
