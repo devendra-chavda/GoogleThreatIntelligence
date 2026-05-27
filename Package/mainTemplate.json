@@ -285,7 +285,7 @@
                       "description": "**STEP 4 - Get the Object ID of your application in Microsoft Entra ID**\n\nAfter creating your app registration, follow the steps in this section to get the Object ID:\n1. Go to **Microsoft Entra ID**.\n2. Select **Enterprise applications** from the left menu.\n3. Find your newly created application in the list (search by the name you provided).\n4. Click on the application.\n5. On the overview page, copy the **Object ID**. This is the **AzureEntraObjectID** needed for the ARM template role assignment.\n"
                     },
                     {
-                      "description": "Click the **Deploy to Azure** button below to deploy the GTI Relevance System Alerts connector Function App.\n\n\t[![Deploy To Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdevendra-chavda%2FGoogleThreatIntelligence%2Frefs%2Fheads%2Fmain%2FData%20Connectors%2FGTIRelevanceSystemAlerts%2Fazuredeploy_GTIRelevanceSystemAlerts.json) [![Deploy to Azure Gov](https://aka.ms/deploytoazuregovbutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdevendra-chavda%2FGoogleThreatIntelligence%2Frefs%2Fheads%2Fmain%2FData%20Connectors%2FGTIRelevanceSystemAlerts%2Fazuredeploy_GTIRelevanceSystemAlerts.json)\n\n2. Select the preferred **Subscription**, **Resource Group**, and **Location**.\n3. Enter the following information:\n\n\t a. **FunctionName** - Enter a unique name for the Azure Function App (maximum 11 characters). Example: `RSAlerts`\n\n\t b. **Location** - Azure region for the Function App and supporting resources. Defaults to the resource group location. Example: `eastus`\n\n\t c. **WorkspaceName** - Enter the Microsoft Sentinel Log Analytics workspace name. Example: `MyWorkspace`\n\n\t d. **AppInsightsWorkspaceResourceID** - Enter the fully qualified resource ID of the Log Analytics workspace for Application Insights. Format: `/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}`\n\n\t e. **AzureTenantID** - Enter the Azure Tenant (Directory) ID obtained in STEP 2. Example: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`\n\n\t f. **AzureClientID** - Enter the Application (Client) ID obtained in STEP 2. Example: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`\n\n\t g. **AzureClientSecret** - Enter the client secret value obtained in STEP 3.\n\n\t h. **AzureEntraObjectID** - Enter the Object ID of your Microsoft Entra app obtained in STEP 4. Example: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`\n\n\t i. **GTIProjectId** - Enter the Google Threat Intelligence project ID obtained in STEP 1. Example: `my-gti-project-id`\n\n\t j. **GTIApiKey** - Enter the Google Threat Intelligence API key obtained in STEP 1.\n\n\t k. **GTIRelevanceSystemAlertsTableName** - Enter the name of the custom table for GTI Relevance System Alerts. The `_CL` suffix is appended automatically. Default: `RelevanceSystemAlerts`\n\n\t l. **StartDate** - (Optional) Enter the start datetime in `yyyy-mm-ddTHH:MM:SS[.fff]Z` format. Example: `2026-05-20T15:43:51Z`. If not provided, data from the last 7 days will be fetched. Must be a past date.\n\n\t m. **GTIFilterExpression** - (Optional) Enter a GTI API filter expression to narrow which alerts are ingested. Example: `state = \"NEW\"`. Any `audit.update_time` condition will be automatically removed — the connector manages that filter internally. Your expression is combined with the checkpoint filter using `AND`.\n\n\t n. **Schedule** - Enter a valid Quartz Cron expression for the timer trigger schedule. Default: `0 */10 * * * *` (every 10 minutes).\n\n\t o. **LogLevel** - Set the log level for the Function App. Allowed values: `Debug`, `Info`, `Warning`, `Error`. Default: `Info`.\n\n4. Mark the checkbox labeled **I agree to the terms and conditions stated above**.\n5. Click **Purchase** to deploy.",
+                      "description": "Click the **Deploy to Azure** button below to deploy the GTI Relevance System Alerts connector Function App.\n\n\t[![Deploy To Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdevendra-chavda%2FGoogleThreatIntelligence%2Frefs%2Fheads%2Fmain%2FData%20Connectors%2FGTIRelevanceSystemAlerts%2Fazuredeploy_GTIRelevanceSystemAlerts.json)] [![Deploy to Azure Gov](https://aka.ms/deploytoazuregovbutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdevendra-chavda%2FGoogleThreatIntelligence%2Frefs%2Fheads%2Fmain%2FData%20Connectors%2FGTIRelevanceSystemAlerts%2Fazuredeploy_GTIRelevanceSystemAlerts.json)]\n\n2. Select the preferred **Subscription**, **Resource Group**, and **Location**.\n3. Enter the following information:\n\n\t a. **FunctionName** - Enter a unique name for the Azure Function App (maximum 11 characters). Example: `RSAlerts`\n\n\t b. **Location** - Azure region for the Function App and supporting resources. Defaults to the resource group location. Example: `eastus`\n\n\t c. **WorkspaceName** - Enter the Microsoft Sentinel Log Analytics workspace name. Example: `MyWorkspace`\n\n\t d. **AppInsightsWorkspaceResourceID** - Enter the fully qualified resource ID of the Log Analytics workspace for Application Insights. Format: `/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}`\n\n\t e. **AzureTenantID** - Enter the Azure Tenant (Directory) ID obtained in STEP 2. Example: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`\n\n\t f. **AzureClientID** - Enter the Application (Client) ID obtained in STEP 2. Example: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`\n\n\t g. **AzureClientSecret** - Enter the client secret value obtained in STEP 3.\n\n\t h. **AzureEntraObjectID** - Enter the Object ID of your Microsoft Entra app obtained in STEP 4. Example: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`\n\n\t i. **GTIProjectId** - Enter the Google Threat Intelligence project ID obtained in STEP 1. Example: `my-gti-project-id`\n\n\t j. **GTIApiKey** - Enter the Google Threat Intelligence API key obtained in STEP 1.\n\n\t k. **GTIRelevanceSystemAlertsTableName** - Enter the name of the custom table for GTI Relevance System Alerts. The `_CL` suffix is appended automatically. Default: `RelevanceSystemAlerts`\n\n\t l. **StartDate** - (Optional) Enter the start datetime in `yyyy-mm-ddTHH:MM:SS[.fff]Z` format. Example: `2026-05-20T15:43:51Z`. If not provided, data from the last 7 days will be fetched. Must be a past date.\n\n\t m. **GTIFilterExpression** - (Optional) Enter a GTI API filter expression to narrow which alerts are ingested. Example: `state = \"NEW\"`. Any `audit.update_time` condition will be automatically removed — the connector manages that filter internally. Your expression is combined with the checkpoint filter using `AND`.\n\n\t n. **Schedule** - Enter a valid Quartz Cron expression for the timer trigger schedule. Default: `0 */10 * * * *` (every 10 minutes).\n\n\t o. **LogLevel** - Set the log level for the Function App. Allowed values: `Debug`, `Info`, `Warning`, `Error`. Default: `Info`.\n\n4. Mark the checkbox labeled **I agree to the terms and conditions stated above**.\n5. Click **Purchase** to deploy.",
                       "title": "STEP 5 - Deploy the Azure Function App using ARM Template"
                     },
                     {
@@ -467,7 +467,7 @@
               "description": "**STEP 4 - Get the Object ID of your application in Microsoft Entra ID**\n\nAfter creating your app registration, follow the steps in this section to get the Object ID:\n1. Go to **Microsoft Entra ID**.\n2. Select **Enterprise applications** from the left menu.\n3. Find your newly created application in the list (search by the name you provided).\n4. Click on the application.\n5. On the overview page, copy the **Object ID**. This is the **AzureEntraObjectID** needed for the ARM template role assignment.\n"
             },
             {
-              "description": "Click the **Deploy to Azure** button below to deploy the GTI Relevance System Alerts connector Function App.\n\n\t[![Deploy To Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdevendra-chavda%2FGoogleThreatIntelligence%2Frefs%2Fheads%2Fmain%2FData%20Connectors%2FGTIRelevanceSystemAlerts%2Fazuredeploy_GTIRelevanceSystemAlerts.json) [![Deploy to Azure Gov](https://aka.ms/deploytoazuregovbutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdevendra-chavda%2FGoogleThreatIntelligence%2Frefs%2Fheads%2Fmain%2FData%20Connectors%2FGTIRelevanceSystemAlerts%2Fazuredeploy_GTIRelevanceSystemAlerts.json)\n\n2. Select the preferred **Subscription**, **Resource Group**, and **Location**.\n3. Enter the following information:\n\n\t a. **FunctionName** - Enter a unique name for the Azure Function App (maximum 11 characters). Example: `RSAlerts`\n\n\t b. **Location** - Azure region for the Function App and supporting resources. Defaults to the resource group location. Example: `eastus`\n\n\t c. **WorkspaceName** - Enter the Microsoft Sentinel Log Analytics workspace name. Example: `MyWorkspace`\n\n\t d. **AppInsightsWorkspaceResourceID** - Enter the fully qualified resource ID of the Log Analytics workspace for Application Insights. Format: `/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}`\n\n\t e. **AzureTenantID** - Enter the Azure Tenant (Directory) ID obtained in STEP 2. Example: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`\n\n\t f. **AzureClientID** - Enter the Application (Client) ID obtained in STEP 2. Example: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`\n\n\t g. **AzureClientSecret** - Enter the client secret value obtained in STEP 3.\n\n\t h. **AzureEntraObjectID** - Enter the Object ID of your Microsoft Entra app obtained in STEP 4. Example: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`\n\n\t i. **GTIProjectId** - Enter the Google Threat Intelligence project ID obtained in STEP 1. Example: `my-gti-project-id`\n\n\t j. **GTIApiKey** - Enter the Google Threat Intelligence API key obtained in STEP 1.\n\n\t k. **GTIRelevanceSystemAlertsTableName** - Enter the name of the custom table for GTI Relevance System Alerts. The `_CL` suffix is appended automatically. Default: `RelevanceSystemAlerts`\n\n\t l. **StartDate** - (Optional) Enter the start datetime in `yyyy-mm-ddTHH:MM:SS[.fff]Z` format. Example: `2026-05-20T15:43:51Z`. If not provided, data from the last 7 days will be fetched. Must be a past date.\n\n\t m. **GTIFilterExpression** - (Optional) Enter a GTI API filter expression to narrow which alerts are ingested. Example: `state = \"NEW\"`. Any `audit.update_time` condition will be automatically removed — the connector manages that filter internally. Your expression is combined with the checkpoint filter using `AND`.\n\n\t n. **Schedule** - Enter a valid Quartz Cron expression for the timer trigger schedule. Default: `0 */10 * * * *` (every 10 minutes).\n\n\t o. **LogLevel** - Set the log level for the Function App. Allowed values: `Debug`, `Info`, `Warning`, `Error`. Default: `Info`.\n\n4. Mark the checkbox labeled **I agree to the terms and conditions stated above**.\n5. Click **Purchase** to deploy.",
+              "description": "Click the **Deploy to Azure** button below to deploy the GTI Relevance System Alerts connector Function App.\n\n\t[![Deploy To Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdevendra-chavda%2FGoogleThreatIntelligence%2Frefs%2Fheads%2Fmain%2FData%20Connectors%2FGTIRelevanceSystemAlerts%2Fazuredeploy_GTIRelevanceSystemAlerts.json)] [![Deploy to Azure Gov](https://aka.ms/deploytoazuregovbutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdevendra-chavda%2FGoogleThreatIntelligence%2Frefs%2Fheads%2Fmain%2FData%20Connectors%2FGTIRelevanceSystemAlerts%2Fazuredeploy_GTIRelevanceSystemAlerts.json)]\n\n2. Select the preferred **Subscription**, **Resource Group**, and **Location**.\n3. Enter the following information:\n\n\t a. **FunctionName** - Enter a unique name for the Azure Function App (maximum 11 characters). Example: `RSAlerts`\n\n\t b. **Location** - Azure region for the Function App and supporting resources. Defaults to the resource group location. Example: `eastus`\n\n\t c. **WorkspaceName** - Enter the Microsoft Sentinel Log Analytics workspace name. Example: `MyWorkspace`\n\n\t d. **AppInsightsWorkspaceResourceID** - Enter the fully qualified resource ID of the Log Analytics workspace for Application Insights. Format: `/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}`\n\n\t e. **AzureTenantID** - Enter the Azure Tenant (Directory) ID obtained in STEP 2. Example: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`\n\n\t f. **AzureClientID** - Enter the Application (Client) ID obtained in STEP 2. Example: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`\n\n\t g. **AzureClientSecret** - Enter the client secret value obtained in STEP 3.\n\n\t h. **AzureEntraObjectID** - Enter the Object ID of your Microsoft Entra app obtained in STEP 4. Example: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`\n\n\t i. **GTIProjectId** - Enter the Google Threat Intelligence project ID obtained in STEP 1. Example: `my-gti-project-id`\n\n\t j. **GTIApiKey** - Enter the Google Threat Intelligence API key obtained in STEP 1.\n\n\t k. **GTIRelevanceSystemAlertsTableName** - Enter the name of the custom table for GTI Relevance System Alerts. The `_CL` suffix is appended automatically. Default: `RelevanceSystemAlerts`\n\n\t l. **StartDate** - (Optional) Enter the start datetime in `yyyy-mm-ddTHH:MM:SS[.fff]Z` format. Example: `2026-05-20T15:43:51Z`. If not provided, data from the last 7 days will be fetched. Must be a past date.\n\n\t m. **GTIFilterExpression** - (Optional) Enter a GTI API filter expression to narrow which alerts are ingested. Example: `state = \"NEW\"`. Any `audit.update_time` condition will be automatically removed — the connector manages that filter internally. Your expression is combined with the checkpoint filter using `AND`.\n\n\t n. **Schedule** - Enter a valid Quartz Cron expression for the timer trigger schedule. Default: `0 */10 * * * *` (every 10 minutes).\n\n\t o. **LogLevel** - Set the log level for the Function App. Allowed values: `Debug`, `Info`, `Warning`, `Error`. Default: `Info`.\n\n4. Mark the checkbox labeled **I agree to the terms and conditions stated above**.\n5. Click **Purchase** to deploy.",
               "title": "STEP 5 - Deploy the Azure Function App using ARM Template"
             },
             {
@@ -822,10 +822,10 @@
                 "status": "Available",
                 "requiredDataConnectors": [
                   {
-                    "connectorId": "ThreatIntelligence",
                     "dataTypes": [
                       "ThreatIntelIndicators"
-                    ]
+                    ],
+                    "connectorId": "ThreatIntelligence"
                   }
                 ],
                 "tactics": [
@@ -836,33 +836,33 @@
                 ],
                 "entityMappings": [
                   {
+                    "entityType": "FileHash",
                     "fieldMappings": [
                       {
-                        "identifier": "Value",
-                        "columnName": "Hash"
+                        "columnName": "Hash",
+                        "identifier": "Value"
                       },
                       {
-                        "identifier": "Algorithm",
-                        "columnName": "HashType"
+                        "columnName": "HashType",
+                        "identifier": "Algorithm"
                       }
-                    ],
-                    "entityType": "FileHash"
+                    ]
                   }
                 ],
                 "eventGroupingSettings": {
                   "aggregationKind": "AlertPerResult"
                 },
                 "alertDetailsOverride": {
-                  "alertDescriptionFormat": "Correlation found from the {{Type}} table.",
-                  "alertDisplayNameFormat": "Google Threat Intelligence Match"
+                  "alertDisplayNameFormat": "Google Threat Intelligence Match",
+                  "alertDescriptionFormat": "Correlation found from the {{Type}} table."
                 },
                 "incidentConfiguration": {
                   "createIncident": true,
                   "groupingConfiguration": {
-                    "lookbackDuration": "1h",
                     "matchingMethod": "AllEntities",
-                    "enabled": true,
-                    "reopenClosedIncident": false
+                    "lookbackDuration": "1h",
+                    "reopenClosedIncident": false,
+                    "enabled": true
                   }
                 }
               }
@@ -945,10 +945,10 @@
                 "status": "Available",
                 "requiredDataConnectors": [
                   {
-                    "connectorId": "ThreatIntelligence",
                     "dataTypes": [
                       "ThreatIntelIndicators"
-                    ]
+                    ],
+                    "connectorId": "ThreatIntelligence"
                   }
                 ],
                 "tactics": [
@@ -959,29 +959,29 @@
                 ],
                 "entityMappings": [
                   {
+                    "entityType": "IP",
                     "fieldMappings": [
                       {
-                        "identifier": "Address",
-                        "columnName": "NetworkIP"
+                        "columnName": "NetworkIP",
+                        "identifier": "Address"
                       }
-                    ],
-                    "entityType": "IP"
+                    ]
                   }
                 ],
                 "eventGroupingSettings": {
                   "aggregationKind": "AlertPerResult"
                 },
                 "alertDetailsOverride": {
-                  "alertDescriptionFormat": "Correlation found from the {{Type}} table.",
-                  "alertDisplayNameFormat": "Google Threat Intelligence Match"
+                  "alertDisplayNameFormat": "Google Threat Intelligence Match",
+                  "alertDescriptionFormat": "Correlation found from the {{Type}} table."
                 },
                 "incidentConfiguration": {
                   "createIncident": true,
                   "groupingConfiguration": {
-                    "lookbackDuration": "1h",
                     "matchingMethod": "AllEntities",
-                    "enabled": true,
-                    "reopenClosedIncident": false
+                    "lookbackDuration": "1h",
+                    "reopenClosedIncident": false,
+                    "enabled": true
                   }
                 }
               }
@@ -1064,10 +1064,10 @@
                 "status": "Available",
                 "requiredDataConnectors": [
                   {
-                    "connectorId": "ThreatIntelligence",
                     "dataTypes": [
                       "ThreatIntelIndicators"
-                    ]
+                    ],
+                    "connectorId": "ThreatIntelligence"
                   }
                 ],
                 "tactics": [
@@ -1078,29 +1078,29 @@
                 ],
                 "entityMappings": [
                   {
+                    "entityType": "DNS",
                     "fieldMappings": [
                       {
-                        "identifier": "DomainName",
-                        "columnName": "Domain"
+                        "columnName": "Domain",
+                        "identifier": "DomainName"
                       }
-                    ],
-                    "entityType": "DNS"
+                    ]
                   }
                 ],
                 "eventGroupingSettings": {
                   "aggregationKind": "AlertPerResult"
                 },
                 "alertDetailsOverride": {
-                  "alertDescriptionFormat": "Correlation found from the {{Type}} table.",
-                  "alertDisplayNameFormat": "Google Threat Intelligence Match"
+                  "alertDisplayNameFormat": "Google Threat Intelligence Match",
+                  "alertDescriptionFormat": "Correlation found from the {{Type}} table."
                 },
                 "incidentConfiguration": {
                   "createIncident": true,
                   "groupingConfiguration": {
-                    "lookbackDuration": "1h",
                     "matchingMethod": "AllEntities",
-                    "enabled": true,
-                    "reopenClosedIncident": false
+                    "lookbackDuration": "1h",
+                    "reopenClosedIncident": false,
+                    "enabled": true
                   }
                 }
               }
@@ -1183,10 +1183,10 @@
                 "status": "Available",
                 "requiredDataConnectors": [
                   {
-                    "connectorId": "ThreatIntelligence",
                     "dataTypes": [
                       "ThreatIntelIndicators"
-                    ]
+                    ],
+                    "connectorId": "ThreatIntelligence"
                   }
                 ],
                 "tactics": [
@@ -1197,29 +1197,29 @@
                 ],
                 "entityMappings": [
                   {
+                    "entityType": "URL",
                     "fieldMappings": [
                       {
-                        "identifier": "Url",
-                        "columnName": "Url"
+                        "columnName": "Url",
+                        "identifier": "Url"
                       }
-                    ],
-                    "entityType": "URL"
+                    ]
                   }
                 ],
                 "eventGroupingSettings": {
                   "aggregationKind": "AlertPerResult"
                 },
                 "alertDetailsOverride": {
-                  "alertDescriptionFormat": "Correlation found from the {{Type}} table.",
-                  "alertDisplayNameFormat": "Google Threat Intelligence Match"
+                  "alertDisplayNameFormat": "Google Threat Intelligence Match",
+                  "alertDescriptionFormat": "Correlation found from the {{Type}} table."
                 },
                 "incidentConfiguration": {
                   "createIncident": true,
                   "groupingConfiguration": {
-                    "lookbackDuration": "1h",
                     "matchingMethod": "AllEntities",
-                    "enabled": true,
-                    "reopenClosedIncident": false
+                    "lookbackDuration": "1h",
+                    "reopenClosedIncident": false,
+                    "enabled": true
                   }
                 }
               }
