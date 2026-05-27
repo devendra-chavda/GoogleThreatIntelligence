@@ -82,10 +82,10 @@
             }
         },
         "StartDate": {
+            "defaultValue": "",
             "type": "string",
-            "minLength": 1,
             "metadata": {
-                "description": "Enter the start datetime in yyyy-mm-ddTHH:MM:SS[.fff]Z format (e.g. 2026-05-20T15:43:51.16Z). If not provided, data from the last 7 days will be fetched. Ensure the value is in the past."
+                "description": "Optional. Enter the start datetime in yyyy-mm-ddTHH:MM:SS[.fff]Z format. Example: 2026-05-20T15:43:51Z. Must be a past date. If not provided, data from the last 7 days will be fetched."
             }
         },
         "GTIFilterExpression": {
