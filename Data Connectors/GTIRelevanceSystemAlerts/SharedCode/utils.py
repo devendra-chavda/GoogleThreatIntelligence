@@ -9,7 +9,7 @@ import datetime
 from json.decoder import JSONDecodeError
 
 from SharedCode.state_manager import StateManager
-from SharedCode.exceptions import GTIAlertsException
+from SharedCode.exceptions import GTIRelevanceSystemAlertsException
 from SharedCode.logger import applogger
 from SharedCode import consts
 
@@ -40,7 +40,7 @@ class Utils:
             dict or None: The retrieved checkpoint data parsed as JSON, or None if no checkpoint exists.
 
         Raises:
-            GTIAlertsException: If there is an error reading or parsing checkpoint data.
+            GTIRelevanceSystemAlertsException: If there is an error reading or parsing checkpoint data.
         """
         __method_name = inspect.currentframe().f_code.co_name
         try:
@@ -73,7 +73,7 @@ class Utils:
                     consts.JSON_DECODE_ERROR_MSG.format(json_error),
                 )
             )
-            raise GTIAlertsException(
+            raise GTIRelevanceSystemAlertsException(
                 "JSON decode error reading checkpoint: {}".format(json_error)
             )
         except Exception as err:
@@ -85,7 +85,7 @@ class Utils:
                     consts.UNEXPECTED_ERROR_MSG.format(err),
                 )
             )
-            raise GTIAlertsException(
+            raise GTIRelevanceSystemAlertsException(
                 "Unexpected error reading checkpoint: {}".format(err)
             )
 
@@ -97,7 +97,7 @@ class Utils:
             data (dict): The data to be JSON-serialised and posted.
 
         Raises:
-            GTIAlertsException: If there is an error writing checkpoint data.
+            GTIRelevanceSystemAlertsException: If there is an error writing checkpoint data.
         """
         __method_name = inspect.currentframe().f_code.co_name
         try:
@@ -127,7 +127,7 @@ class Utils:
                     consts.TYPE_ERROR_MSG.format(type_error),
                 )
             )
-            raise GTIAlertsException(
+            raise GTIRelevanceSystemAlertsException(
                 "Type error posting checkpoint: {}".format(type_error)
             )
         except Exception as err:
@@ -139,7 +139,7 @@ class Utils:
                     consts.UNEXPECTED_ERROR_MSG.format(err),
                 )
             )
-            raise GTIAlertsException(
+            raise GTIRelevanceSystemAlertsException(
                 "Unexpected error posting checkpoint: {}".format(err)
             )
 
@@ -156,7 +156,7 @@ class Utils:
             str: The start date for data fetching in DATE_TIME_FORMAT.
 
         Raises:
-            GTIAlertsException: If the start date is invalid or in the future.
+            GTIRelevanceSystemAlertsException: If the start date is invalid or in the future.
         """
         __method_name = inspect.currentframe().f_code.co_name
         try:
@@ -197,7 +197,7 @@ class Utils:
                             "Configured StartDate is a future date: {}".format(start_date),
                         )
                     )
-                    raise GTIAlertsException(
+                    raise GTIRelevanceSystemAlertsException(
                         "StartDate '{}' is in the future".format(start_date)
                     )
                 return start_date
@@ -212,12 +212,12 @@ class Utils:
                         ),
                     )
                 )
-                raise GTIAlertsException(
+                raise GTIRelevanceSystemAlertsException(
                     "StartDate '{}' is not a valid datetime in yyyy-mm-ddTHH:MM:SS[.fff]Z format".format(
                         consts.START_DATE
                     )
                 )
-        except GTIAlertsException:
+        except GTIRelevanceSystemAlertsException:
             raise
         except Exception as err:
             applogger.error(
@@ -228,6 +228,6 @@ class Utils:
                     consts.UNEXPECTED_ERROR_MSG.format(err),
                 )
             )
-            raise GTIAlertsException(
+            raise GTIRelevanceSystemAlertsException(
                 "Unexpected error determining start date: {}".format(err)
             )

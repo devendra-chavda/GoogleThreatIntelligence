@@ -23,7 +23,7 @@ GTI_TOKEN_EXCHANGE_URL = os.environ.get(
     "https://idp.prod.identity.proactive.virustotal.com/realms/master/exchange/api-key",
 )
 GTI_API_VERSION = "v1beta"
-GTI_ALERTS_TABLE_NAME = "RelevanceSystemAlerts"
+GTI_RELEVANCE_SYSTEM_ALERTS_TABLE_NAME = "RelevanceSystemAlerts"
 
 # *Checkpoint related constants
 CONN_STRING = os.environ.get("AzureWebJobsStorage", "")

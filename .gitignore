@@ -1,2 +1,4 @@
 .python_packages
 .claude
+.env
+*.env

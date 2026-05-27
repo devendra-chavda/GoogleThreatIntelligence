@@ -21,7 +21,7 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from SharedCode.logger import applogger
 from SharedCode import consts
-from SharedCode.exceptions import GTIAlertsException, GTIAlertsAuthException
+from SharedCode.exceptions import GTIRelevanceSystemAlertsException, GTIRelevanceSystemAlertsAuthException
 
 
 def _retry_on_status_code(response):
@@ -96,8 +96,8 @@ class GTIClient:
         caches the resulting token and its expiry time.
 
         Raises:
-            GTIAlertsAuthException: If token exchange fails or API key is invalid.
-            GTIAlertsException: For unexpected errors during token exchange.
+            GTIRelevanceSystemAlertsAuthException: If token exchange fails or API key is invalid.
+            GTIRelevanceSystemAlertsException: For unexpected errors during token exchange.
         """
         __method_name = inspect.currentframe().f_code.co_name
         try:
@@ -116,7 +116,10 @@ class GTIClient:
                 method="POST",
                 url=consts.GTI_TOKEN_EXCHANGE_URL,
                 data=payload,
-                headers={"Content-Type": "application/json"},
+                headers={
+                    "Content-Type": "application/json",
+                    "User-Agent": "Azure-Sentinel-GTIRelevanceSystemAlerts/1.0.0",
+                },
                 timeout=consts.MAX_TIMEOUT_SENTINEL,
             )
 
@@ -134,7 +137,7 @@ class GTIClient:
                             "Token exchange response missing 'access_token' field",
                         )
                     )
-                    raise GTIAlertsAuthException(
+                    raise GTIRelevanceSystemAlertsAuthException(
                         "Token exchange response missing 'access_token' field"
                     )
                 applogger.info(
@@ -155,7 +158,7 @@ class GTIClient:
                         "Token exchange returned 401 Unauthorized - invalid GTI API key",
                     )
                 )
-                raise GTIAlertsAuthException(
+                raise GTIRelevanceSystemAlertsAuthException(
                     "GTI token exchange returned 401 Unauthorized: invalid API key"
                 )
             elif response.status_code == 403:
@@ -167,7 +170,7 @@ class GTIClient:
                         "Token exchange returned 403 Forbidden. Response: {}".format(response.text),
                     )
                 )
-                raise GTIAlertsAuthException(
+                raise GTIRelevanceSystemAlertsAuthException(
                     "GTI token exchange returned 403 Forbidden: {}".format(response.text)
                 )
             elif response.status_code in consts.RETRY_STATUS_CODE:
@@ -193,13 +196,13 @@ class GTIClient:
                         ),
                     )
                 )
-                raise GTIAlertsAuthException(
+                raise GTIRelevanceSystemAlertsAuthException(
                     "GTI token exchange failed with status {}: {}".format(
                         response.status_code, response.text
                     )
                 )
 
-        except GTIAlertsAuthException:
+        except GTIRelevanceSystemAlertsAuthException:
             raise
         except requests.exceptions.Timeout as error:
             applogger.error(
@@ -210,7 +213,7 @@ class GTIClient:
                     consts.TIME_OUT_ERROR_MSG.format(error),
                 )
             )
-            raise GTIAlertsException(
+            raise GTIRelevanceSystemAlertsException(
                 "Timeout during GTI token exchange: {}".format(error)
             )
         except RequestsConnectionError as error:
@@ -234,7 +237,7 @@ class GTIClient:
                     consts.JSON_DECODE_ERROR_MSG.format(error),
                 )
             )
-            raise GTIAlertsException(
+            raise GTIRelevanceSystemAlertsException(
                 "JSON decode error during GTI token exchange: {}".format(error)
             )
         except Exception as error:
@@ -246,7 +249,7 @@ class GTIClient:
                     consts.UNEXPECTED_ERROR_MSG.format(error),
                 )
             )
-            raise GTIAlertsException(
+            raise GTIRelevanceSystemAlertsException(
                 "Unexpected error during GTI token exchange: {}".format(error)
             )
 
@@ -256,8 +259,8 @@ class GTIClient:
         Calls token exchange if the current token is missing or near expiry.
 
         Raises:
-            GTIAlertsAuthException: If token exchange fails.
-            GTIAlertsException: For unexpected errors.
+            GTIRelevanceSystemAlertsAuthException: If token exchange fails.
+            GTIRelevanceSystemAlertsException: For unexpected errors.
         """
         __method_name = inspect.currentframe().f_code.co_name
         if self._access_token is None or self._is_token_expired():
@@ -282,7 +285,7 @@ class GTIClient:
                         ),
                     )
                 )
-                raise GTIAlertsAuthException(
+                raise GTIRelevanceSystemAlertsAuthException(
                     "Max retries exceeded during GTI token exchange: {}".format(error)
                 )
 
@@ -312,6 +315,7 @@ class GTIClient:
             "Authorization": "Bearer {}".format(self._access_token),
             "x-goog-user-project": consts.GTI_PROJECT_ID,
             "Content-Type": "application/json",
+            "User-Agent": "Azure-Sentinel-GTIRelevanceSystemAlerts/1.0.0",
         }
 
     def _handle_response(self, response, method_name):
@@ -323,7 +327,7 @@ class GTIClient:
                 @retry decorator triggers retry_if_result(_retry_on_status_code).
 
         Raises:
-            GTIAlertsException: For 400, 403, and unexpected status codes.
+            GTIRelevanceSystemAlertsException: For 400, 403, and unexpected status codes.
         """
         if response.status_code == 200:
             response_json = response.json()
@@ -342,7 +346,7 @@ class GTIClient:
                     "Bad Request (400): filter syntax error. Response: {}".format(response.text),
                 )
             )
-            raise GTIAlertsException("GTI API returned 400 Bad Request: {}".format(response.text))
+            raise GTIRelevanceSystemAlertsException("GTI API returned 400 Bad Request: {}".format(response.text))
 
         if response.status_code == 403:
             applogger.error(
@@ -353,7 +357,7 @@ class GTIClient:
                     ),
                 )
             )
-            raise GTIAlertsException("GTI API returned 403 Forbidden: {}".format(response.text))
+            raise GTIRelevanceSystemAlertsException("GTI API returned 403 Forbidden: {}".format(response.text))
 
         if response.status_code in consts.RETRY_STATUS_CODE:
             applogger.error(
@@ -370,7 +374,7 @@ class GTIClient:
                 "Unexpected status code {}: {}".format(response.status_code, response.text),
             )
         )
-        raise GTIAlertsException(
+        raise GTIRelevanceSystemAlertsException(
             "GTI API returned unexpected status {}: {}".format(response.status_code, response.text)
         )
 
@@ -389,8 +393,8 @@ class GTIClient:
             dict: JSON response with 'alerts' list and optional 'nextPageToken'.
 
         Raises:
-            GTIAlertsException: For non-retryable API errors.
-            GTIAlertsAuthException: If authentication fails.
+            GTIRelevanceSystemAlertsException: For non-retryable API errors.
+            GTIRelevanceSystemAlertsAuthException: If authentication fails.
         """
         __method_name = inspect.currentframe().f_code.co_name
         try:
@@ -440,7 +444,7 @@ class GTIClient:
                     timeout=consts.MAX_TIMEOUT_SENTINEL,
                 )
                 if response.status_code != 200:
-                    raise GTIAlertsException(
+                    raise GTIRelevanceSystemAlertsException(
                         "GTI API retry after 401 failed with status {}: {}".format(
                             response.status_code, response.text
                         )
@@ -448,7 +452,7 @@ class GTIClient:
 
             return self._handle_response(response, __method_name)
 
-        except (GTIAlertsException, GTIAlertsAuthException):
+        except (GTIRelevanceSystemAlertsException, GTIRelevanceSystemAlertsAuthException):
             raise
         except requests.exceptions.Timeout as error:
             applogger.error(
@@ -457,7 +461,7 @@ class GTIClient:
                     consts.TIME_OUT_ERROR_MSG.format(error),
                 )
             )
-            raise GTIAlertsException("Timeout during GTI alerts API call: {}".format(error))
+            raise GTIRelevanceSystemAlertsException("Timeout during GTI alerts API call: {}".format(error))
         except RequestsConnectionError as error:
             applogger.error(
                 consts.LOG_FORMAT.format(
@@ -475,7 +479,7 @@ class GTIClient:
                     consts.JSON_DECODE_ERROR_MSG.format(error),
                 )
             )
-            raise GTIAlertsException("JSON decode error during GTI alerts API call: {}".format(error))
+            raise GTIRelevanceSystemAlertsException("JSON decode error during GTI alerts API call: {}".format(error))
         except Exception as error:
             applogger.error(
                 consts.LOG_FORMAT.format(
@@ -483,4 +487,4 @@ class GTIClient:
                     consts.UNEXPECTED_ERROR_MSG.format(error),
                 )
             )
-            raise GTIAlertsException("Unexpected error during GTI alerts API call: {}".format(error))
+            raise GTIRelevanceSystemAlertsException("Unexpected error during GTI alerts API call: {}".format(error))

@@ -6,7 +6,7 @@ from azure.monitor.ingestion import LogsIngestionClient
 from azure.core.exceptions import HttpResponseError, ClientAuthenticationError
 from SharedCode.logger import applogger
 from SharedCode import consts
-from SharedCode.exceptions import GTIAlertsException
+from SharedCode.exceptions import GTIRelevanceSystemAlertsException
 
 
 def send_data_to_sentinel(data, data_table):
@@ -17,7 +17,7 @@ def send_data_to_sentinel(data, data_table):
         data_table (str): Log type/table name for ingestion (without _CL suffix).
 
     Raises:
-        GTIAlertsException: For any error during data upload to Sentinel.
+        GTIRelevanceSystemAlertsException: For any error during data upload to Sentinel.
     """
     __method_name = inspect.currentframe().f_code.co_name
     try:
@@ -70,7 +70,7 @@ def send_data_to_sentinel(data, data_table):
                 "Authentication error while uploading data to Sentinel. Error: {}".format(error),
             )
         )
-        raise GTIAlertsException(
+        raise GTIRelevanceSystemAlertsException(
             "Authentication error while uploading data to Sentinel: {}".format(error)
         )
     except HttpResponseError as error:
@@ -82,10 +82,10 @@ def send_data_to_sentinel(data, data_table):
                 "HTTP response error while uploading data to Sentinel. Error: {}".format(error),
             )
         )
-        raise GTIAlertsException(
+        raise GTIRelevanceSystemAlertsException(
             "HTTP response error while uploading data to Sentinel: {}".format(error)
         )
-    except GTIAlertsException:
+    except GTIRelevanceSystemAlertsException:
         raise
     except Exception as error:
         applogger.error(
@@ -96,6 +96,6 @@ def send_data_to_sentinel(data, data_table):
                 "Unexpected error while uploading data to Sentinel. Error: {}".format(error),
             )
         )
-        raise GTIAlertsException(
+        raise GTIRelevanceSystemAlertsException(
             "Unexpected error while uploading data to Sentinel: {}".format(error)
         )

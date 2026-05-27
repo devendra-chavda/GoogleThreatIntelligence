@@ -7,7 +7,7 @@ import azure.functions as func
 
 from SharedCode.logger import applogger
 from SharedCode import consts
-from RelevanceSystemAlerts.gti_alerts_helper import GTIAlertsHelper
+from RelevanceSystemAlerts.gti_alerts_helper import GTIRelevanceSystemAlertsHelper
 
 
 log_format = consts.LOG_FORMAT
@@ -32,7 +32,7 @@ def main(mytimer: func.TimerRequest) -> None:
         )
     )
 
-    gti_alerts_helper = GTIAlertsHelper(int(start))
+    gti_alerts_helper = GTIRelevanceSystemAlertsHelper(int(start))
     gti_alerts_helper.get_gti_alerts_in_sentinel()
 
     end = time.time()

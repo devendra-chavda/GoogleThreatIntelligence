@@ -11,7 +11,7 @@ from tenacity import RetryError
 from SharedCode.utils import Utils
 from SharedCode.logger import applogger
 from SharedCode import consts
-from SharedCode.exceptions import GTIAlertsException, GTIAlertsTimeoutException
+from SharedCode.exceptions import GTIRelevanceSystemAlertsException, GTIRelevanceSystemAlertsTimeoutException
 from SharedCode.state_manager import StateManager
 from SharedCode.sentinel import send_data_to_sentinel
 from SharedCode.gti_client import GTIClient
@@ -21,7 +21,7 @@ CHECKPOINT_FILE_PATH = "gti_alerts_checkpoint"
 FUNCTION_NAME = "RelevanceSystemAlerts"
 
 
-class GTIAlertsHelper(Utils):
+class GTIRelevanceSystemAlertsHelper(Utils):
     """Helper class for ingesting Google Threat Intelligence alerts into Sentinel.
 
     Inherits from Utils for checkpoint and environment variable management.
@@ -30,7 +30,7 @@ class GTIAlertsHelper(Utils):
     """
 
     def __init__(self, start_time: int) -> None:
-        """Initialise the GTIAlertsHelper.
+        """Initialise the GTIRelevanceSystemAlertsHelper.
 
         Validates required environment variables, initialises the GTI client,
         and sets up the checkpoint StateManager.
@@ -71,8 +71,8 @@ class GTIAlertsHelper(Utils):
         updates the checkpoint after each page to support resumable execution.
 
         Raises:
-            GTIAlertsTimeoutException: If approaching the Azure Function timeout limit.
-            GTIAlertsException: For any unrecoverable error during the ingestion workflow.
+            GTIRelevanceSystemAlertsTimeoutException: If approaching the Azure Function timeout limit.
+            GTIRelevanceSystemAlertsException: For any unrecoverable error during the ingestion workflow.
         """
         __method_name = inspect.currentframe().f_code.co_name
         try:
@@ -97,7 +97,7 @@ class GTIAlertsHelper(Utils):
 
             self._fetch_and_ingest_alerts(last_checkpoint, ingested_hashes)
 
-        except GTIAlertsTimeoutException:
+        except GTIRelevanceSystemAlertsTimeoutException:
             applogger.info(
                 self.log_format.format(
                     consts.LOGS_STARTS_WITH,
@@ -107,7 +107,7 @@ class GTIAlertsHelper(Utils):
                 )
             )
             return
-        except GTIAlertsException:
+        except GTIRelevanceSystemAlertsException:
             raise
         except Exception as err:
             applogger.error(
@@ -118,7 +118,7 @@ class GTIAlertsHelper(Utils):
                     consts.UNEXPECTED_ERROR_MSG.format(err),
                 )
             )
-            raise GTIAlertsException(
+            raise GTIRelevanceSystemAlertsException(
                 "Unexpected error during GTI alerts ingestion: {}".format(err)
             )
 
@@ -203,8 +203,8 @@ class GTIAlertsHelper(Utils):
                 the checkpoint boundary from the previous run.
 
         Raises:
-            GTIAlertsTimeoutException: If approaching the Azure Function timeout limit.
-            GTIAlertsException: For API errors or ingestion failures.
+            GTIRelevanceSystemAlertsTimeoutException: If approaching the Azure Function timeout limit.
+            GTIRelevanceSystemAlertsException: For API errors or ingestion failures.
         """
         __method_name = inspect.currentframe().f_code.co_name
         try:
@@ -229,7 +229,7 @@ class GTIAlertsHelper(Utils):
                             ),
                         )
                     )
-                    raise GTIAlertsTimeoutException(
+                    raise GTIRelevanceSystemAlertsTimeoutException(
                         "Function timeout limit reached after page {}".format(page_number)
                     )
 
@@ -261,7 +261,7 @@ class GTIAlertsHelper(Utils):
                             ),
                         )
                     )
-                    raise GTIAlertsException(
+                    raise GTIRelevanceSystemAlertsException(
                         "Max retries exceeded fetching GTI alerts: {}".format(error)
                     )
 
@@ -305,7 +305,7 @@ class GTIAlertsHelper(Utils):
                         )
 
                     if new_alerts:
-                        send_data_to_sentinel(new_alerts, consts.GTI_ALERTS_TABLE_NAME)
+                        send_data_to_sentinel(new_alerts, consts.GTI_RELEVANCE_SYSTEM_ALERTS_TABLE_NAME)
                         total_ingested += len(new_alerts)
                         applogger.info(
                             self.log_format.format(
@@ -317,7 +317,7 @@ class GTIAlertsHelper(Utils):
                                 ),
                             )
                         )
-                        
+
                         # --- Checkpoint and boundary-hash update ---
                         # Alerts are sorted asc, so the last alert has the newest updateTime.
                         # If it's newer than the current checkpoint, advance the checkpoint
@@ -356,9 +356,9 @@ class GTIAlertsHelper(Utils):
 
                 page_token = next_page_token
 
-        except GTIAlertsTimeoutException:
+        except GTIRelevanceSystemAlertsTimeoutException:
             raise
-        except GTIAlertsException:
+        except GTIRelevanceSystemAlertsException:
             raise
         except Exception as err:
             applogger.error(
@@ -369,6 +369,6 @@ class GTIAlertsHelper(Utils):
                     consts.UNEXPECTED_ERROR_MSG.format(err),
                 )
             )
-            raise GTIAlertsException(
+            raise GTIRelevanceSystemAlertsException(
                 "Unexpected error during alert pagination and ingestion: {}".format(err)
             )
