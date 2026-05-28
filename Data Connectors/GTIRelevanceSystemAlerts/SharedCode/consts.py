@@ -11,6 +11,7 @@ AZURE_CLIENT_ID = os.environ.get("AZURE_CLIENT_ID", "")
 AZURE_CLIENT_SECRET = os.environ.get("AZURE_CLIENT_SECRET", "")
 AZURE_TENANT_ID = os.environ.get("AZURE_TENANT_ID", "")
 SCOPE = os.environ.get("SCOPE", "https://monitor.azure.com//.default")
+KEYVAULT_NAME = os.environ.get("KEYVAULT_NAME", "")
 AZURE_DATA_COLLECTION_ENDPOINT = os.environ.get("AZURE_DATA_COLLECTION_ENDPOINT", "")
 DCR_RULE_ID = os.environ.get("AZURE_DATA_COLLECTION_RULE_ID", "")
 
