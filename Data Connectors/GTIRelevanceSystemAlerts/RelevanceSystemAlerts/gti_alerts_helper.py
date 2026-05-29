@@ -298,11 +298,11 @@ class GTIRelevanceSystemAlertsHelper(Utils):
                         last_update_time = alerts[-1].get("audit", {}).get("updateTime", "")
                         if last_update_time:
                             last_checkpoint = last_update_time
-                    # Save without page_token to signal a clean start on the next invocation.
-                    self.post_checkpoint_data(
-                        self.checkpoint_obj,
-                        {"last_checkpoint": last_checkpoint},
-                    )
+                        # Save without page_token to signal a clean start on the next invocation.
+                        self.post_checkpoint_data(
+                            self.checkpoint_obj,
+                            {"last_checkpoint": last_checkpoint},
+                        )
                     applogger.info(
                         self.log_format.format(
                             consts.LOGS_STARTS_WITH,
