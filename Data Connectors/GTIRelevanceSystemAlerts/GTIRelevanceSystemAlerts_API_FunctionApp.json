@@ -106,7 +106,15 @@
         },
         {
             "title": "",
-            "description": "**STEP 6 - Verify Data Ingestion**\n\nAfter deployment, verify that data is being ingested into Microsoft Sentinel:\n1. Navigate to **Microsoft Sentinel** → **Logs**.\n2. Run the following query:\n\n```kql\nRelevanceSystemAlerts_CL\n| sort by TimeGenerated desc\n| limit 10\n```\n\n3. Data should appear within **5–10 minutes** of the first function execution.\n4. The connector status on the **Data connectors** page shows **Connected** once data has been received within the last 30 days."
+            "description": "**STEP 6 - Create a Keyvault**\n\n Follow these instructions to create a new Keyvault.\n 1. In the Azure portal, Go to **Key vaults** and click on Create.\n 2. Select Subsciption, Resource Group and provide unique name of keyvault."
+        },
+        {
+            "title": "",
+            "description": "**STEP 7 - Create Access Policy in Keyvault**\n\n Follow these instructions to create access policy in Keyvault.\n 1. Go to keyvaults, select your keyvault, go to Access policies on left side panel, click on create.\n 2. Select all keys & secrets permissions. Click next.\n 3. In the principal section, search by application name which was generated in STEP - 2. Click next.\n\n **Note: **Ensure the Permission model in the Access Configuration of Key Vault is set to **'Vault access policy'**"
+        },
+        {
+            "title": "",
+            "description": "**STEP 8 - Verify Data Ingestion**\n\nAfter deployment, verify that data is being ingested into Microsoft Sentinel:\n1. Navigate to **Microsoft Sentinel** → **Logs**.\n2. Run the following query:\n\n```kql\nRelevanceSystemAlerts_CL\n| sort by TimeGenerated desc\n| limit 10\n```\n\n3. Data should appear within **5–10 minutes** of the first function execution.\n4. The connector status on the **Data connectors** page shows **Connected** once data has been received within the last 30 days."
         },
         {
             "title": "",
