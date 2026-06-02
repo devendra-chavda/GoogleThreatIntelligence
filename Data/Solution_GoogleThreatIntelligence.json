@@ -1,18 +1,46 @@
 {
-  "Name": "GoogleThreatIntelligence",
+  "Name": "Google Threat Intelligence",
   "Author": "Google",
   "Logo": "<img src=\"https://raw.githubusercontent.com/Azure/Azure-Sentinel/master/Logos/GoogleThreatIntelligence.svg\" width=\"75px\" height=\"75px\">",
   "Description": "This Google Threat Intelligence Solution contains Playbooks that can help enrich incident information with threat information and intelligence for IPs, file hashes and URLs from Google Threat Intelligence. Enriched information can help drive focused investigations in Security Operations.",
   "Data Connectors": [
     "Data Connectors/GTIRelevanceSystemAlerts/GTIRelevanceSystemAlerts_API_FunctionApp.json"
   ],
-  "Parsers": [],
-  "Hunting Queries": [],
-  "Analytic Rules": [],
+  "Parsers": [
+    "Parsers/GTIRelevanceSystemAlerts.yaml"
+  ],
+  "Hunting Queries": [
+    "Hunting Queries/ThreatHuntHash.yaml",
+    "Hunting Queries/ThreatHuntIp.yaml",
+    "Hunting Queries/ThreatHuntDomain.yaml",
+    "Hunting Queries/ThreatHuntUrl.yaml"
+  ],
+  "Analytic Rules": [
+    "Analytic Rules/ThreatHunting/ThreatHuntHash.yaml",
+    "Analytic Rules/ThreatHunting/ThreatHuntIp.yaml",
+    "Analytic Rules/ThreatHunting/ThreatHuntDomain.yaml",
+    "Analytic Rules/ThreatHunting/ThreatHuntUrl.yaml",
+    "Analytic Rules/RelevanceSystemAlerts/GTI_DataLeakAlerts.yaml",
+    "Analytic Rules/RelevanceSystemAlerts/GTI_HighCriticalPriorityAlerts.yaml",
+    "Analytic Rules/RelevanceSystemAlerts/GTI_HighRelevanceAlerts.yaml",
+    "Analytic Rules/RelevanceSystemAlerts/GTI_InitialAccessBrokerAlerts.yaml",
+    "Analytic Rules/RelevanceSystemAlerts/GTI_InsiderThreatAlerts.yaml",
+    "Analytic Rules/RelevanceSystemAlerts/GTI_RelevanceSystemAlerts_IncidentByAlertId.yaml"
+  ],
   "Workbooks": [],
-  "Playbooks": [],
-  "BasePath": "Solutions/GoogleThreatIntelligence",
-  "Version": "3.0.0",
+  "Playbooks": [
+    "Playbooks/CustomConnector/GTICustomConnector/azuredeploy.json",
+	  "Playbooks/GTIEnrichment/GTI-EnrichIncident/azuredeploy.json",
+	  "Playbooks/GTIEnrichment/GTI-EnrichAlert/azuredeploy.json",
+	  "Playbooks/GTIEnrichment/GTI-EnrichEntity/GTI-EnrichIP/azuredeploy.json",
+	  "Playbooks/GTIEnrichment/GTI-EnrichEntity/GTI-EnrichURL/azuredeploy.json",
+	  "Playbooks/GTIEnrichment/GTI-EnrichEntity/GTI-EnrichFilehash/azuredeploy.json",
+	  "Playbooks/GTIEnrichment/GTI-EnrichEntity/GTI-EnrichDomain/azuredeploy.json",
+	  "Playbooks/GTIThreatList/azuredeploy.json",
+	  "Playbooks/GTIIocStream/azuredeploy.json"
+  ],
+  "BasePath": "C:\\GitHub\\Azure-Sentinel\\Solutions\\Google Threat Intelligence",
+  "Version": "3.2.3",
   "Metadata": "SolutionMetadata.json",
   "TemplateSpec": true,
   "StaticDataConnectorIds": []
