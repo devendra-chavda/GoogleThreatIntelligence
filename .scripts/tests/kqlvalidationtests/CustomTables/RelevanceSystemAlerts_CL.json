@@ -1,6 +1,5 @@
 {
-    "Name": "RelevanceSystemAlerts_CL",
-    "Columns": [
+    "Properties": [
         {
             "Name": "TimeGenerated",
             "Type": "datetime"
@@ -120,6 +119,19 @@
         {
             "Name": "priorityAnalysis_reasoning",
             "Type": "string"
+        },
+        {
+            "Name": "TenantId",
+            "Type": "string"
+        },
+        {
+            "Name": "Type",
+            "Type": "string"
+        },
+        {
+            "Name": "_ResourceId",
+            "Type": "string"
         }
-    ]
+    ],
+    "Name": "RelevanceSystemAlerts_CL"
 }

@@ -11,8 +11,8 @@ requiredDataConnectors:
   - connectorId: GoogleThreatIntelligenceRelevanceSystemAlertsAPI
     dataTypes:
       - RelevanceSystemAlerts_CL
-queryFrequency: 10m
-queryPeriod: 10m
+queryFrequency: 5m
+queryPeriod: 5m
 triggerOperator: gt
 triggerThreshold: 0
 tactics:
@@ -20,7 +20,12 @@ tactics:
   - Impact
   - CredentialAccess
   - Exfiltration
-relevantTechniques: []
+relevantTechniques:
+  - T1566
+  - T1078
+  - T1552
+  - T1486
+  - T1567
 query: |
   GTIRelevanceSystemAlerts
   | where PriorityLevel in ("HIGH", "CRITICAL")
@@ -62,7 +67,7 @@ incidentConfiguration:
   groupingConfiguration:
     enabled: true
     reopenClosedIncident: false
-    lookbackDuration: PT5H
+    lookbackDuration: P5D
     matchingMethod: Selected
     groupByCustomDetails:
       - AlertId

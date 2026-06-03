@@ -12,17 +12,20 @@ requiredDataConnectors:
   - connectorId: GoogleThreatIntelligenceRelevanceSystemAlertsAPI
     dataTypes:
       - RelevanceSystemAlerts_CL
-queryFrequency: 10m
-queryPeriod: 10m
+queryFrequency: 5m
+queryPeriod: 5m
 triggerOperator: gt
 triggerThreshold: 0
 tactics:
   - Exfiltration
   - Impact
   - CredentialAccess
+  - Collection
 relevantTechniques:
   - T1567
+  - T1530
   - T1552
+  - T1485
 query: |
   GTIRelevanceSystemAlerts
   | where DetailType == "data_leak"
@@ -66,7 +69,7 @@ incidentConfiguration:
   groupingConfiguration:
     enabled: true
     reopenClosedIncident: false
-    lookbackDuration: PT5H
+    lookbackDuration: P5D
     matchingMethod: Selected
     groupByCustomDetails:
       - AlertId
