@@ -20,7 +20,7 @@ def main(mytimer: func.TimerRequest) -> None:
         mytimer (func.TimerRequest): The Azure Functions timer trigger binding.
     """
     utc_timestamp = (
-        datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
+        datetime.datetime.now(datetime.timezone.utc).isoformat()
     )
     start = time.time()
 

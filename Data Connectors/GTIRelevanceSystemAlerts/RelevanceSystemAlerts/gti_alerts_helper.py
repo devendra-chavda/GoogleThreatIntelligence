@@ -194,6 +194,88 @@ class GTIRelevanceSystemAlertsHelper(Utils):
         )
         return combined
 
+    def _check_timeout(self, page_number: int, last_checkpoint: str):
+        """Raise a timeout exception if the function is approaching its execution limit.
+
+        Args:
+            page_number (int): Current page number (used for log context).
+            last_checkpoint (str): Current checkpoint timestamp (used for log context).
+
+        Raises:
+            GTIRelevanceSystemAlertsTimeoutException: If the timeout threshold has been reached.
+        """
+        __method_name = inspect.currentframe().f_code.co_name
+        if int(time.time()) >= self.start + consts.FUNCTION_APP_TIMEOUT_SECONDS:
+            applogger.info(
+                self.log_format.format(
+                    consts.LOGS_STARTS_WITH,
+                    __method_name,
+                    self.azure_function_name,
+                    "Timeout guard triggered at page {}, checkpoint saved at: {}".format(
+                        page_number, last_checkpoint
+                    ),
+                )
+            )
+            raise GTIRelevanceSystemAlertsTimeoutException(
+                "Function timeout limit reached after page {}".format(page_number)
+            )
+
+    def _ingest_page_alerts(self, alerts: list, total_ingested: int, method_name: str) -> int:
+        """Send a page of alerts to Sentinel and return the updated ingestion count.
+
+        Args:
+            alerts (list): Alerts retrieved from the current API page.
+            total_ingested (int): Running count of ingested alerts before this page.
+            method_name (str): Caller method name for log context.
+
+        Returns:
+            int: Updated total ingested count after this page.
+        """
+        if alerts:
+            send_data_to_sentinel(alerts, consts.GTI_RELEVANCE_SYSTEM_ALERTS_TABLE_NAME)
+            total_ingested += len(alerts)
+            applogger.info(
+                self.log_format.format(
+                    consts.LOGS_STARTS_WITH,
+                    method_name,
+                    self.azure_function_name,
+                    "Ingested {} alerts, total so far: {}".format(len(alerts), total_ingested),
+                )
+            )
+        return total_ingested
+
+    def _save_page_checkpoint(self, alerts: list, next_page_token: str, last_checkpoint: str) -> str:
+        """Persist the checkpoint after processing one API page.
+
+        If there is a next page token the checkpoint retains the current
+        ``last_checkpoint`` time plus the token so the next invocation can
+        resume at the correct position.  On the final page the checkpoint
+        is advanced to the last alert's ``audit.updateTime`` with no token.
+
+        Args:
+            alerts (list): Alerts from the current page.
+            next_page_token (str | None): Continuation token from the API response.
+            last_checkpoint (str): Current checkpoint timestamp.
+
+        Returns:
+            str: Updated ``last_checkpoint`` value (unchanged when a next page token exists).
+        """
+        if next_page_token:
+            self.post_checkpoint_data(
+                self.checkpoint_obj,
+                {"last_checkpoint": last_checkpoint, "page_token": next_page_token},
+            )
+        else:
+            if alerts:
+                last_update_time = alerts[-1].get("audit", {}).get("updateTime", "")
+                if last_update_time:
+                    last_checkpoint = last_update_time
+            self.post_checkpoint_data(
+                self.checkpoint_obj,
+                {"last_checkpoint": last_checkpoint},
+            )
+        return last_checkpoint
+
     def _fetch_and_ingest_alerts(self, last_checkpoint: str, saved_page_token: str):
         """Paginate through GTI alerts and ingest them into Sentinel.
 
@@ -222,27 +304,12 @@ class GTIRelevanceSystemAlertsHelper(Utils):
         __method_name = inspect.currentframe().f_code.co_name
         try:
             filter_expr = self._build_filter_expression(last_checkpoint)
-            # If a page token was saved in the checkpoint, resume from that page.
-            # We pass both the filter and the page token on the first call.
             page_token = saved_page_token
             page_number = 0
             total_ingested = 0
 
             while True:
-                if int(time.time()) >= self.start + consts.FUNCTION_APP_TIMEOUT_SECONDS:
-                    applogger.info(
-                        self.log_format.format(
-                            consts.LOGS_STARTS_WITH,
-                            __method_name,
-                            self.azure_function_name,
-                            "Timeout guard triggered at page {}, checkpoint saved at: {}".format(
-                                page_number, last_checkpoint
-                            ),
-                        )
-                    )
-                    raise GTIRelevanceSystemAlertsTimeoutException(
-                        "Function timeout limit reached after page {}".format(page_number)
-                    )
+                self._check_timeout(page_number, last_checkpoint)
 
                 page_number += 1
                 applogger.info(
@@ -273,36 +340,12 @@ class GTIRelevanceSystemAlertsHelper(Utils):
                     )
                 )
 
-                if alerts:
-                    send_data_to_sentinel(alerts, consts.GTI_RELEVANCE_SYSTEM_ALERTS_TABLE_NAME)
-                    total_ingested += len(alerts)
-                    applogger.info(
-                        self.log_format.format(
-                            consts.LOGS_STARTS_WITH,
-                            __method_name,
-                            self.azure_function_name,
-                            "Ingested {} alerts, total so far: {}".format(len(alerts), total_ingested),
-                        )
-                    )
+                total_ingested = self._ingest_page_alerts(alerts, total_ingested, __method_name)
+                last_checkpoint = self._save_page_checkpoint(alerts, next_page_token, last_checkpoint)
 
                 if next_page_token:
-                    # More pages to come — save page token but keep the same last_checkpoint time.
-                    self.post_checkpoint_data(
-                        self.checkpoint_obj,
-                        {"last_checkpoint": last_checkpoint, "page_token": next_page_token},
-                    )
                     page_token = next_page_token
                 else:
-                    # Final page — advance last_checkpoint to the last alert's updateTime.
-                    if alerts:
-                        last_update_time = alerts[-1].get("audit", {}).get("updateTime", "")
-                        if last_update_time:
-                            last_checkpoint = last_update_time
-                        # Save without page_token to signal a clean start on the next invocation.
-                        self.post_checkpoint_data(
-                            self.checkpoint_obj,
-                            {"last_checkpoint": last_checkpoint},
-                        )
                     applogger.info(
                         self.log_format.format(
                             consts.LOGS_STARTS_WITH,

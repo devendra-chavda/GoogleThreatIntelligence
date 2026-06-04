@@ -162,7 +162,7 @@ class Utils:
         try:
             if not consts.START_DATE:
                 start_date = (
-                    datetime.datetime.utcnow()
+                    datetime.datetime.now(datetime.timezone.utc)
                     - datetime.timedelta(days=consts.DEFAULT_LOOKUP_DAYS)
                 ).strftime(consts.DATE_TIME_FORMAT)
                 applogger.info(
@@ -188,7 +188,7 @@ class Utils:
                         "Start date configured by user: {}".format(start_date),
                     )
                 )
-                if start_date > datetime.datetime.utcnow().strftime(consts.DATE_TIME_FORMAT):
+                if start_date > datetime.datetime.now(datetime.timezone.utc).strftime(consts.DATE_TIME_FORMAT):
                     applogger.error(
                         self.log_format.format(
                             consts.LOGS_STARTS_WITH,

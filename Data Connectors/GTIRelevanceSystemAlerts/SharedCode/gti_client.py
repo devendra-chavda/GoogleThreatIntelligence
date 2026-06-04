@@ -110,6 +110,116 @@ class GTIClient:
                 )
             )
 
+    def _handle_token_exchange_response(self, response, method_name: str) -> bool:
+        """Process a token exchange HTTP response.
+
+        Returns:
+            bool: True if the token was successfully obtained and cached.
+                  False if the response has a retryable status code.
+
+        Raises:
+            GTIRelevanceSystemAlertsAuthException: For 401/403 or missing access_token.
+            GTIRelevanceSystemAlertsException: For unexpected status codes.
+        """
+        if response.status_code == 200:
+            response_json = response.json()
+            self._access_token = response_json.get("access_token")
+            if not self._access_token:
+                raise GTIRelevanceSystemAlertsAuthException(
+                    "Token exchange response missing 'access_token' field"
+                )
+            expires_in = response_json.get("expires_in", 3600)
+            self._token_expiry = time.time() + expires_in
+            applogger.info(
+                consts.LOG_FORMAT.format(
+                    consts.LOGS_STARTS_WITH, method_name, "GTIClient",
+                    "Successfully obtained GTI Bearer token, expires_in={}s".format(expires_in),
+                )
+            )
+            self._save_token_to_keyvault()
+            return True
+
+        if response.status_code in (401, 403):
+            applogger.error(
+                consts.LOG_FORMAT.format(
+                    consts.LOGS_STARTS_WITH, method_name, "GTIClient",
+                    "Token exchange returned {} - invalid GTI API key or project. Response: {}".format(
+                        response.status_code, response.text
+                    ),
+                )
+            )
+            raise GTIRelevanceSystemAlertsAuthException(
+                "GTI token exchange returned {}: {}".format(response.status_code, response.text)
+            )
+
+        if response.status_code in consts.RETRY_STATUS_CODE:
+            return False
+
+        applogger.error(
+            consts.LOG_FORMAT.format(
+                consts.LOGS_STARTS_WITH, method_name, "GTIClient",
+                "Token exchange unexpected status {}: {}".format(response.status_code, response.text),
+            )
+        )
+        raise GTIRelevanceSystemAlertsAuthException(
+            "GTI token exchange failed with status {}: {}".format(response.status_code, response.text)
+        )
+
+    def _handle_token_exchange_attempt_errors(self, error, attempt: int, method_name: str):
+        """Handle per-attempt exceptions during token exchange.
+
+        Re-raises non-retryable errors immediately; applies backoff sleep for
+        connection errors that still have remaining retries.
+
+        Args:
+            error: The caught exception.
+            attempt (int): Current 1-based attempt number.
+            method_name (str): Caller method name for log context.
+
+        Raises:
+            GTIRelevanceSystemAlertsException: Always — either wrapping the error or
+                propagating a max-retries exceeded message.
+        """
+        if isinstance(error, requests.exceptions.Timeout):
+            applogger.error(
+                consts.LOG_FORMAT.format(
+                    consts.LOGS_STARTS_WITH, method_name, "GTIClient",
+                    consts.TIME_OUT_ERROR_MSG.format(error),
+                )
+            )
+            raise GTIRelevanceSystemAlertsException("Timeout during GTI token exchange: {}".format(error))
+        if isinstance(error, RequestsConnectionError):
+            if attempt < consts.MAX_RETRIES:
+                sleep_time = _backoff_sleep(attempt)
+                applogger.warning(
+                    consts.LOG_FORMAT.format(
+                        consts.LOGS_STARTS_WITH, method_name, "GTIClient",
+                        "Connection error, retrying in {}s (attempt {}/{}): {}".format(
+                            sleep_time, attempt, consts.MAX_RETRIES, error
+                        ),
+                    )
+                )
+                time.sleep(sleep_time)
+                return
+            raise GTIRelevanceSystemAlertsException(
+                "Connection error after {} retries during token exchange: {}".format(consts.MAX_RETRIES, error)
+            )
+        if isinstance(error, JSONDecodeError):
+            applogger.error(
+                consts.LOG_FORMAT.format(
+                    consts.LOGS_STARTS_WITH, method_name, "GTIClient",
+                    consts.JSON_DECODE_ERROR_MSG.format(error),
+                )
+            )
+            raise GTIRelevanceSystemAlertsException("JSON decode error during GTI token exchange: {}".format(error))
+        applogger.error(
+            consts.LOG_FORMAT.format(
+                consts.LOGS_STARTS_WITH, method_name, "GTIClient",
+                consts.UNEXPECTED_ERROR_MSG.format(error),
+            )
+        )
+        raise GTIRelevanceSystemAlertsException("Unexpected error during GTI token exchange: {}".format(error))
+
     def _exchange_api_key(self):
         """Exchange GTI API key for a Bearer access token with exponential backoff retry.
 
@@ -143,108 +253,31 @@ class GTIClient:
                     timeout=consts.MAX_TIMEOUT_SENTINEL,
                 )
 
-                if response.status_code == 200:
-                    response_json = response.json()
-                    self._access_token = response_json.get("access_token")
-                    if not self._access_token:
-                        raise GTIRelevanceSystemAlertsAuthException(
-                            "Token exchange response missing 'access_token' field"
-                        )
-                    expires_in = response_json.get("expires_in", 3600)
-                    self._token_expiry = time.time() + expires_in
-                    applogger.info(
-                        consts.LOG_FORMAT.format(
-                            consts.LOGS_STARTS_WITH, __method_name, "GTIClient",
-                            "Successfully obtained GTI Bearer token, expires_in={}s".format(expires_in),
-                        )
-                    )
-                    self._save_token_to_keyvault()
+                success = self._handle_token_exchange_response(response, __method_name)
+                if success:
                     return
 
-                if response.status_code in (401, 403):
-                    applogger.error(
-                        consts.LOG_FORMAT.format(
-                            consts.LOGS_STARTS_WITH, __method_name, "GTIClient",
-                            "Token exchange returned {} - invalid GTI API key or project. Response: {}".format(
-                                response.status_code, response.text
-                            ),
-                        )
-                    )
-                    raise GTIRelevanceSystemAlertsAuthException(
-                        "GTI token exchange returned {}: {}".format(response.status_code, response.text)
-                    )
-
-                if response.status_code in consts.RETRY_STATUS_CODE:
-                    if attempt < consts.MAX_RETRIES:
-                        sleep_time = _backoff_sleep(attempt)
-                        applogger.warning(
-                            consts.LOG_FORMAT.format(
-                                consts.LOGS_STARTS_WITH, __method_name, "GTIClient",
-                                "Token exchange retryable status {} - retrying in {}s (attempt {}/{})".format(
-                                    response.status_code, sleep_time, attempt, consts.MAX_RETRIES
-                                ),
-                            )
-                        )
-                        time.sleep(sleep_time)
-                        continue
-                    raise GTIRelevanceSystemAlertsException(
-                        "Max retries exceeded for token exchange, last status: {}".format(response.status_code)
-                    )
-
-                applogger.error(
-                    consts.LOG_FORMAT.format(
-                        consts.LOGS_STARTS_WITH, __method_name, "GTIClient",
-                        "Token exchange unexpected status {}: {}".format(response.status_code, response.text),
-                    )
-                )
-                raise GTIRelevanceSystemAlertsAuthException(
-                    "GTI token exchange failed with status {}: {}".format(response.status_code, response.text)
-                )
-
-            except GTIRelevanceSystemAlertsAuthException:
-                raise
-            except GTIRelevanceSystemAlertsException:
-                raise
-            except requests.exceptions.Timeout as error:
-                applogger.error(
-                    consts.LOG_FORMAT.format(
-                        consts.LOGS_STARTS_WITH, __method_name, "GTIClient",
-                        consts.TIME_OUT_ERROR_MSG.format(error),
-                    )
-                )
-                raise GTIRelevanceSystemAlertsException("Timeout during GTI token exchange: {}".format(error))
-            except RequestsConnectionError as error:
+                # Retryable status code path
                 if attempt < consts.MAX_RETRIES:
                     sleep_time = _backoff_sleep(attempt)
                     applogger.warning(
                         consts.LOG_FORMAT.format(
                             consts.LOGS_STARTS_WITH, __method_name, "GTIClient",
-                            "Connection error, retrying in {}s (attempt {}/{}): {}".format(
-                                sleep_time, attempt, consts.MAX_RETRIES, error
+                            "Token exchange retryable status {} - retrying in {}s (attempt {}/{})".format(
+                                response.status_code, sleep_time, attempt, consts.MAX_RETRIES
                             ),
                         )
                     )
                     time.sleep(sleep_time)
                     continue
                 raise GTIRelevanceSystemAlertsException(
-                    "Connection error after {} retries during token exchange: {}".format(consts.MAX_RETRIES, error)
+                    "Max retries exceeded for token exchange, last status: {}".format(response.status_code)
                 )
-            except JSONDecodeError as error:
-                applogger.error(
-                    consts.LOG_FORMAT.format(
-                        consts.LOGS_STARTS_WITH, __method_name, "GTIClient",
-                        consts.JSON_DECODE_ERROR_MSG.format(error),
-                    )
-                )
-                raise GTIRelevanceSystemAlertsException("JSON decode error during GTI token exchange: {}".format(error))
+
+            except (GTIRelevanceSystemAlertsAuthException, GTIRelevanceSystemAlertsException):
+                raise
             except Exception as error:
-                applogger.error(
-                    consts.LOG_FORMAT.format(
-                        consts.LOGS_STARTS_WITH, __method_name, "GTIClient",
-                        consts.UNEXPECTED_ERROR_MSG.format(error),
-                    )
-                )
-                raise GTIRelevanceSystemAlertsException("Unexpected error during GTI token exchange: {}".format(error))
+                self._handle_token_exchange_attempt_errors(error, attempt, __method_name)
 
     def ensure_authenticated(self):
         """Ensure a valid Bearer token is available, using KeyVault cache then exchange if needed.
@@ -329,6 +362,93 @@ class GTIClient:
             "GTI API returned unexpected status {}: {}".format(response.status_code, response.text)
         )
 
+    def _refresh_token_on_401(self, response, url: str, params: dict, method_name: str):
+        """Refresh the access token on a 401 response and retry the request once.
+
+        Args:
+            response: The original HTTP response object with status 401.
+            url (str): Request URL to retry after token refresh.
+            params (dict): Query parameters to include in the retry request.
+            method_name (str): Caller method name for log context.
+
+        Returns:
+            requests.Response: The response from the retried request.
+        """
+        applogger.warning(
+            consts.LOG_FORMAT.format(
+                consts.LOGS_STARTS_WITH, method_name, "GTIClient",
+                "Unauthorized (401): refreshing token and retrying.",
+            )
+        )
+        self._access_token = None
+        self._token_expiry = 0
+        self.ensure_authenticated()
+        return requests.get(
+            url=url,
+            headers=self._get_headers(),
+            params=params,
+            timeout=consts.MAX_TIMEOUT_SENTINEL,
+        )
+
+    def _handle_alerts_attempt_errors(self, error, attempt: int, method_name: str):
+        """Handle per-attempt exceptions during the alerts API call.
+
+        Re-raises non-retryable errors immediately; applies backoff sleep for
+        connection errors that still have remaining retries.
+
+        Args:
+            error: The caught exception.
+            attempt (int): Current 1-based attempt number.
+            method_name (str): Caller method name for log context.
+
+        Raises:
+            GTIRelevanceSystemAlertsException: Always — either wrapping the error or
+                propagating a max-retries exceeded message.
+        """
+        if isinstance(error, requests.exceptions.Timeout):
+            applogger.error(
+                consts.LOG_FORMAT.format(
+                    consts.LOGS_STARTS_WITH, method_name, "GTIClient",
+                    consts.TIME_OUT_ERROR_MSG.format(error),
+                )
+            )
+            raise GTIRelevanceSystemAlertsException("Timeout during GTI alerts API call: {}".format(error))
+        if isinstance(error, RequestsConnectionError):
+            if attempt < consts.MAX_RETRIES:
+                sleep_time = _backoff_sleep(attempt)
+                applogger.warning(
+                    consts.LOG_FORMAT.format(
+                        consts.LOGS_STARTS_WITH, method_name, "GTIClient",
+                        "Connection error, retrying in {}s (attempt {}/{}): {}".format(
+                            sleep_time, attempt, consts.MAX_RETRIES, error
+                        ),
+                    )
+                )
+                time.sleep(sleep_time)
+                return
+            raise GTIRelevanceSystemAlertsException(
+                "Connection error after {} retries during GTI alerts API call: {}".format(consts.MAX_RETRIES, error)
+            )
+        if isinstance(error, JSONDecodeError):
+            applogger.error(
+                consts.LOG_FORMAT.format(
+                    consts.LOGS_STARTS_WITH, method_name, "GTIClient",
+                    consts.JSON_DECODE_ERROR_MSG.format(error),
+                )
+            )
+            raise GTIRelevanceSystemAlertsException(
+                "JSON decode error during GTI alerts API call: {}".format(error)
+            )
+        applogger.error(
+            consts.LOG_FORMAT.format(
+                consts.LOGS_STARTS_WITH, method_name, "GTIClient",
+                consts.UNEXPECTED_ERROR_MSG.format(error),
+            )
+        )
+        raise GTIRelevanceSystemAlertsException(
+            "Unexpected error during GTI alerts API call: {}".format(error)
+        )
+
     def list_alerts(self, filter_expr=None, page_token=None):
         """Fetch one page of GTI alerts with exponential backoff retry.
 
@@ -377,21 +497,7 @@ class GTIClient:
                     )
 
                     if response.status_code == 401:
-                        applogger.warning(
-                            consts.LOG_FORMAT.format(
-                                consts.LOGS_STARTS_WITH, __method_name, "GTIClient",
-                                "Unauthorized (401): refreshing token and retrying.",
-                            )
-                        )
-                        self._access_token = None
-                        self._token_expiry = 0
-                        self.ensure_authenticated()
-                        response = requests.get(
-                            url=url,
-                            headers=self._get_headers(),
-                            params=params,
-                            timeout=consts.MAX_TIMEOUT_SENTINEL,
-                        )
+                        response = self._refresh_token_on_401(response, url, params, __method_name)
 
                     result = self._handle_response(response, __method_name)
 
@@ -420,52 +526,8 @@ class GTIClient:
 
                 except (GTIRelevanceSystemAlertsException, GTIRelevanceSystemAlertsAuthException):
                     raise
-                except requests.exceptions.Timeout as error:
-                    applogger.error(
-                        consts.LOG_FORMAT.format(
-                            consts.LOGS_STARTS_WITH, __method_name, "GTIClient",
-                            consts.TIME_OUT_ERROR_MSG.format(error),
-                        )
-                    )
-                    raise GTIRelevanceSystemAlertsException("Timeout during GTI alerts API call: {}".format(error))
-                except RequestsConnectionError as error:
-                    if attempt < consts.MAX_RETRIES:
-                        sleep_time = _backoff_sleep(attempt)
-                        applogger.warning(
-                            consts.LOG_FORMAT.format(
-                                consts.LOGS_STARTS_WITH, __method_name, "GTIClient",
-                                "Connection error, retrying in {}s (attempt {}/{}): {}".format(
-                                    sleep_time, attempt, consts.MAX_RETRIES, error
-                                ),
-                            )
-                        )
-                        time.sleep(sleep_time)
-                        continue
-                    raise GTIRelevanceSystemAlertsException(
-                        "Connection error after {} retries during GTI alerts API call: {}".format(
-                            consts.MAX_RETRIES, error
-                        )
-                    )
-                except JSONDecodeError as error:
-                    applogger.error(
-                        consts.LOG_FORMAT.format(
-                            consts.LOGS_STARTS_WITH, __method_name, "GTIClient",
-                            consts.JSON_DECODE_ERROR_MSG.format(error),
-                        )
-                    )
-                    raise GTIRelevanceSystemAlertsException(
-                        "JSON decode error during GTI alerts API call: {}".format(error)
-                    )
                 except Exception as error:
-                    applogger.error(
-                        consts.LOG_FORMAT.format(
-                            consts.LOGS_STARTS_WITH, __method_name, "GTIClient",
-                            consts.UNEXPECTED_ERROR_MSG.format(error),
-                        )
-                    )
-                    raise GTIRelevanceSystemAlertsException(
-                        "Unexpected error during GTI alerts API call: {}".format(error)
-                    )
+                    self._handle_alerts_attempt_errors(error, attempt, __method_name)
 
         except (GTIRelevanceSystemAlertsException, GTIRelevanceSystemAlertsAuthException):
             raise
