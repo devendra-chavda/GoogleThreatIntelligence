@@ -509,7 +509,7 @@
                         "AZURE_DATA_COLLECTION_RULE_ID": "[reference(resourceId('Microsoft.Insights/dataCollectionRules', variables('mainRuleName')), '2022-06-01').immutableId]",
                         "GTI_FILTER_EXPRESSION": "[trim(parameters('GTIFilterExpression'))]",
                         "KEYVAULT_NAME": "[trim(parameters('KeyVaultName'))]",
-                        "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/devendra-chavda/GoogleThreatIntelligence/raw/refs/heads/main/Data%20Connectors/GTIRelevanceSystemAlerts/GTIRelevanceSystemAlerts.zip"
+                        "WEBSITE_RUN_FROM_PACKAGE": "https://aka.ms/sentinel-GTIRelevanceSystemAlerts-functionapp"
                     }
                 }
             ]
