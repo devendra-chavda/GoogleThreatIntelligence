@@ -28,10 +28,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     container_name = body.get("containerName")
     blob_path = body.get("blobPath")
     api_key = body.get("apiKey")
-    disable_sandbox_raw = body.get("disable_sandbox")
-    disable_sandbox = disable_sandbox_raw.lower() == "true" if disable_sandbox_raw else None
+    disable_sandbox = body.get("disable_sandbox")
     password = body.get("password")
-    storage_region = body.get("storage_region") or None
+    storage_region = body.get("storage_region")
 
     missing = [
         name
