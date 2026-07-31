@@ -54,7 +54,7 @@ class GTIUploader:
     ) -> requests.Response:
         """POST the file content to the GTI upload URL, with any optional submission parameters."""
         data = {}
-        if disable_sandbox is not None:
+        if disable_sandbox:
             data["disable_sandbox"] = str(disable_sandbox).lower()
         if password:
             data["password"] = password
