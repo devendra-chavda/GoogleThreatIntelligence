@@ -1,6 +1,4 @@
-"""
-Main Function
-"""
+"""Main function."""
 
 # pylint: disable=logging-fstring-interpolation
 
@@ -17,10 +15,9 @@ VALID_STORAGE_REGIONS = ("US", "CA", "EU", "GB")
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    """
-    Downloads a blob (>32MB) and submits it to Google Threat Intelligence (VirusTotal)
-    using the large-file upload URL flow. Shared by GTIFileScanEnrichment and
-    GTIFileScanBlobEnrichment playbooks.
+    """Download a blob and submit it to Google Threat Intelligence via the large-file upload flow.
+
+    Shared by GTIFileScanEnrichment and GTIFileScanBlobEnrichment playbooks.
     :param req: func.HttpRequest
     """
     body = req.get_json()
