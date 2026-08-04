@@ -25,10 +25,8 @@ class GTIUploader:
 
         Uses the Function App's own managed identity (Storage Blob Data Reader role required).
         """
-        if ".us" in scope:
-            account_url = f"https://{storage_account_name}.blob.core.usgovcloudapi.net"
-        else:
-            account_url = f"https://{storage_account_name}.blob.core.windows.net"
+        domain = "blob.core.usgovcloudapi.net" if ".us" in scope else "blob.core.windows.net"
+        account_url = f"https://{storage_account_name}.{domain}"
         blob_service_client = BlobServiceClient(account_url, credential=ManagedIdentityCredential())
         blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_path)
         self.log.info("Downloading blob %s/%s from %s", container_name, blob_path, storage_account_name)
