@@ -10,6 +10,7 @@ from azure.storage.blob import BlobServiceClient
 gti_base_url = environ.get("GTIBaseUrl", "https://www.virustotal.com")
 scope = environ.get("SCOPE", "https://monitor.azure.com//.default")
 
+
 class GTIUploader:
     """Wrapper class shared by GTI playbooks to upload a blob larger than 32MB.
 
